@@ -197,6 +197,7 @@ function renderScene() {
         metalness: 0.3,
       })
       const mesh = new THREE.Mesh(geo, mat)
+      mesh.position.y = h / 2 // Move Up: Put bottom on floor
       mesh.castShadow = true
       mesh.receiveShadow = true
       group.add(mesh)
