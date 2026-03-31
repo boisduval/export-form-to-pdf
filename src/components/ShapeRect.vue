@@ -46,7 +46,7 @@ function drawRoom() {
     return
 
   // 3. 计算缩放比，确保始终完整显示在画布内
-  const padding = 10
+  const padding = 40
   const rw = Number(rect.value.w) || 1
   const rh = Number(rect.value.h) || 1
 
@@ -69,7 +69,32 @@ function drawRoom() {
     evented: false,
   })
 
-  roomGroup = [roomRect]
+  roomGroup = [
+    roomRect,
+    // 长度标注 (上边上侧)
+    new IText(`${rw}m`, {
+      left: cw / 2,
+      top: ch / 2 - sh / 2 - 12,
+      originX: 'center',
+      originY: 'center',
+      fontSize: 12,
+      fill: primaryColor,
+      selectable: false,
+      evented: false,
+    }),
+    // 宽度标注 (左边左侧)
+    new IText(`${rh}m`, {
+      left: cw / 2 - sw / 2 - 12,
+      top: ch / 2,
+      originX: 'center',
+      originY: 'center',
+      angle: -90,
+      fontSize: 12,
+      fill: primaryColor,
+      selectable: false,
+      evented: false,
+    }),
+  ]
   canvas.value.add(...roomGroup)
   roomGroup.forEach(obj => canvas.value?.sendObjectToBack(obj))
   canvas.value.renderAll()
