@@ -1,86 +1,193 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { onMounted, ref, shallowRef, watch } from 'vue'
+import { Canvas, IText, Rect } from 'fabric'
 
-const rect = ref({ w: 40, h: 30 })
+const props = defineProps<{
+  modelValue?: { w: number, h: number }
+  readOnly?: boolean
+}>()
 
-const svgSize = { w: 300, h: 200 }
+const rect = ref(props.modelValue || { w: 40, h: 30 })
 
-const scale = computed(() => {
-  const padding = 40
-  return Math.min((svgSize.w - padding * 2) / rect.value.w, (svgSize.h - padding * 2) / rect.value.h)
+const canvasEl = shallowRef<HTMLCanvasElement | null>(null)
+const canvas = shallowRef<Canvas | null>(null)
+let roomGroup: (Rect | IText)[] = [] // 记录房间轮廓相关的对象
+let cabinetRect: Rect | null = null // 烟柜方框
+let cabinetLabel: IText | null = null // 烟柜文字
+
+const primaryColor = '#3B66F5'
+const redColor = '#ef4444'
+
+/**
+ * 核心逻辑：绘制房间轮廓及标注
+ */
+function drawRoom() {
+  if (!canvas.value)
+    return
+
+  // 1. 清除旧的对象
+  roomGroup.forEach(obj => canvas.value?.remove(obj))
+  roomGroup = []
+
+  // 2. 检查并校正画布尺寸 (解决 v-show 初始化问题)
+  const container = canvasEl.value?.parentElement
+  if (container && container.clientWidth > 0) {
+    if (canvas.value.getWidth() !== container.clientWidth) {
+      canvas.value.setDimensions({
+        width: container.clientWidth,
+        height: container.clientHeight || 200,
+      })
+    }
+  }
+
+  const cw = canvas.value.getWidth()
+  const ch = canvas.value.getHeight()
+  if (cw === 0 || ch === 0)
+    return
+
+  // 3. 计算缩放比，确保始终完整显示在画布内
+  const padding = 20
+  const rw = Number(rect.value.w) || 1
+  const rh = Number(rect.value.h) || 1
+
+  const scale = Math.min((cw - padding * 2) / rw, (ch - padding * 2) / rh)
+  const sw = rw * scale
+  const sh = rh * scale
+
+  // 4. 应用绘制: 使用中心点定位确保始终居中
+  const roomRect = new Rect({
+    left: cw / 2,
+    top: ch / 2,
+    originX: 'center',
+    originY: 'center',
+    width: sw,
+    height: sh,
+    fill: 'transparent',
+    stroke: primaryColor,
+    strokeWidth: 2,
+    selectable: false,
+    evented: false,
+  })
+
+  roomGroup = [roomRect]
+  canvas.value.add(...roomGroup)
+  roomGroup.forEach(obj => canvas.value?.sendObjectToBack(obj))
+  canvas.value.renderAll()
+}
+
+function initCanvas() {
+  if (!canvasEl.value)
+    return
+  const container = canvasEl.value.parentElement
+
+  canvas.value = new Canvas(canvasEl.value, {
+    backgroundColor: '#ffffff',
+    width: container?.clientWidth || 300,
+    height: container?.clientHeight || 200,
+    selection: false,
+  })
+
+  drawRoom()
+  addCabinet()
+}
+
+function addCabinet() {
+  if (!canvas.value)
+    return
+
+  // 如果已经存在烟柜，先移除（保持唯一）
+  if (cabinetRect) {
+    canvas.value.remove(cabinetRect, cabinetLabel!)
+  }
+
+  // 1. 创建红色边框
+  cabinetRect = new Rect({
+    left: 150,
+    top: 150,
+    width: 40,
+    height: 20,
+    fill: 'rgba(239, 68, 68, 0.1)',
+    stroke: redColor,
+    strokeWidth: 2,
+    cornerColor: redColor,
+    cornerSize: 8,
+    transparentCorners: false,
+  })
+
+  // 2. 创建文字组件 (不会因为拉伸而变形)
+  cabinetLabel = new IText('烟柜', {
+    fontSize: 12,
+    fill: redColor,
+    fontWeight: 'bold',
+    selectable: false,
+    evented: false,
+    originX: 'center',
+    originY: 'center',
+  })
+
+  // 3. 同步位置和角度的函数
+  const syncLabel = () => {
+    if (!cabinetRect || !cabinetLabel)
+      return
+    const center = cabinetRect.getCenterPoint()
+    cabinetLabel.set({
+      left: center.x,
+      top: center.y,
+      angle: cabinetRect.angle,
+    })
+  }
+
+  // 4. 监听变换
+  cabinetRect.on('moving', syncLabel)
+  cabinetRect.on('scaling', syncLabel)
+  cabinetRect.on('rotating', syncLabel)
+
+  canvas.value.add(cabinetRect, cabinetLabel)
+  syncLabel() // 初始同步
+  canvas.value.setActiveObject(cabinetRect)
+  canvas.value.renderAll()
+}
+
+onMounted(() => {
+  setTimeout(initCanvas, 50) // 给 DOM 渲染留一点时间
 })
 
-const rectData = computed(() => {
-  const s = scale.value
-  const w = rect.value.w * s
-  const h = rect.value.h * s
-  const ox = (svgSize.w - w) / 2
-  const oy = (svgSize.h - h) / 2
-  return { w, h, ox, oy }
-})
-
-const points = computed(() => {
-  const { w, h, ox, oy } = rectData.value
-  return `${ox},${oy} ${ox + w},${oy} ${ox + w},${oy + h} ${ox},${oy + h}`
-})
+watch(rect, drawRoom, { deep: true })
 
 defineExpose({
   rect,
+  toDataURL: () => {
+    if (!canvas.value)
+      return ''
+    // 强制渲染一次，确保包含背景色和所有对象
+    return canvas.value.toDataURL({
+      format: 'png',
+      multiplier: 2,
+      enableRetinaScaling: true,
+    })
+  },
 })
 </script>
 
 <template>
   <div class="flex flex-col gap-4">
     <!-- Preview Area -->
-    <div class="bg-transparent border-1.5 border-dashed border-gray-200 flex flex-col h-64 items-center justify-center overflow-hidden relative rounded-2xl shadow-none">
-      <svg :height="svgSize.h" :viewBox="`0 0 ${svgSize.w} ${svgSize.h}`" :width="svgSize.w">
-        <polygon
-          :points="points"
-          class="fill-transparent stroke-primary stroke-2"
-          stroke-linejoin="round"
-        />
-        <g class="font-bold fill-primary/80 text-[10px]">
-          <!-- Top label (Always above top edge) -->
-          <text
-            :x="rectData.ox + rectData.w / 2"
-            :y="rectData.oy - 12"
-            text-anchor="middle"
-            dominant-baseline="auto"
-          >
-            {{ rect.w }}m
-          </text>
-          <!-- Left label (Always to the left of left edge) -->
-          <text
-            :x="rectData.ox - 12"
-            :y="rectData.oy + rectData.h / 2"
-            text-anchor="middle"
-            dominant-baseline="middle"
-            :transform="`rotate(-90, ${rectData.ox - 12}, ${rectData.oy + rectData.h / 2})`"
-          >
-            {{ rect.h }}m
-          </text>
-        </g>
-      </svg>
+    <div :class="[readOnly ? 'h-40 border-none rounded-lg' : 'h-64 shadow-sm border rounded-2xl']" class="bg-white flex flex-col items-center justify-center relative overflow-hidden">
+      <canvas ref="canvasEl" />
     </div>
 
     <!-- Inputs -->
-    <div class="bg-white border-gray-50 flex flex-col overflow-hidden rounded-xl shadow-sm">
+    <div v-if="!readOnly" class="border-gray-50 rounded-xl bg-white flex flex-col shadow-sm overflow-hidden">
       <van-cell-group :border="false">
-        <van-field
-          v-model="rect.w"
-          input-align="right"
-          label="长度 (m)"
-          placeholder="请输入长度"
-          type="number"
-        />
-        <van-field
-          v-model="rect.h"
-          input-align="right"
-          label="宽度 (m)"
-          placeholder="请输入宽度"
-          type="number"
-        />
+        <van-field v-model="rect.w" input-align="right" label="长度 (m)" placeholder="请输入" type="number" />
+        <van-field v-model="rect.h" input-align="right" label="宽度 (m)" placeholder="请输入" type="number" />
       </van-cell-group>
     </div>
   </div>
 </template>
+
+<style scoped>
+:deep(.canvas-container) {
+  margin: 0 auto;
+}
+</style>

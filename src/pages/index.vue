@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { showToast } from 'vant'
+import { saveAs } from 'file-saver'
+import { showFailToast, showLoadingToast, showSuccessToast, showToast } from 'vant'
+import { generateDocx } from '@/utils/docxExport'
 
 const active = ref(0)
 const selectedTemplate = ref(1)
+const drawingRef = ref()
+const drawingData = ref()
+const formStepRef = ref()
 
 const steps = [
   { title: '选择模板' },
@@ -18,19 +23,58 @@ const templates = [
   { id: 4, name: '实地核查普通版 (排队)', type: 'DOCX' },
 ]
 
+const selectedTemplateName = computed(() => {
+  return templates.find(t => t.id === selectedTemplate.value)?.name
+})
+
+const selectedTemplateValue = computed(() => {
+  return templates.find(t => t.id === selectedTemplate.value)?.value
+})
+
 function nextStep() {
+  if (active.value === 1 && drawingRef.value) {
+    drawingData.value = drawingRef.value.getShapeData()
+  }
   if (active.value < steps.length - 1) {
     active.value++
   }
 }
 
-function onSubmit() {
-  showToast('提交成功，正在导出结果...')
-}
+async function onSubmit() {
+  if (!formStepRef.value?.formData) {
+    showToast('表单数据异常')
+    return
+  }
 
-const selectedTemplateName = computed(() => {
-  return templates.find(t => t.id === selectedTemplate.value)?.name
-})
+  const loading = showLoadingToast({
+    message: '正在生成文档...',
+    forbidClick: true,
+    duration: 0,
+  })
+
+  try {
+    const formData = formStepRef.value.formData
+    const imageData = drawingData.value?.image
+
+    // 调用简化后的导出函数
+    const blob = await generateDocx(
+      formData,
+      imageData,
+      `/${selectedTemplateValue.value}.docx`,
+    )
+
+    const fileName = `${formData.applicant_name || '未命名'}_核查报告.docx`
+    saveAs(blob, fileName)
+
+    loading.close()
+    showSuccessToast('导出成功')
+  }
+  catch (error) {
+    console.error('Export error:', error)
+    loading.close()
+    showFailToast('导出失败')
+  }
+}
 </script>
 
 <template>
@@ -38,19 +82,24 @@ const selectedTemplateName = computed(() => {
     <!-- Consolidated Header & Progress Section -->
     <AppHeader
       :active="active"
-      :steps="steps"
       :selected-template-name="selectedTemplateName"
+      :steps="steps"
     />
 
     <!-- Step Content -->
     <div class="px-6 pb-32 pt-1 flex-1 overflow-y-auto">
       <TemplateStep
-        v-if="active === 0"
+        v-show="active === 0"
         v-model="selectedTemplate"
         :templates="templates"
       />
-      <DrawingStep v-else-if="active === 1" />
-      <FormStep v-else-if="active === 2" />
+      <DrawingStep v-show="active === 1" ref="drawingRef" />
+      <FormStep
+        v-show="active === 2"
+        ref="formStepRef"
+        :drawing-data="drawingData"
+        :template-value="selectedTemplateValue"
+      />
     </div>
 
     <!-- Styled Bottom Nav -->
