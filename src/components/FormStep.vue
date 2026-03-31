@@ -41,12 +41,12 @@ defineExpose({
         </van-field>
         <van-cell title="平面图预览">
           <template #label>
-            <div class="mt-2 border rounded-lg bg-white flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden p-2">
+            <div class="mt-2 p-2 border rounded-lg bg-white flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden">
               <img
                 v-if="drawingData?.image"
                 :src="drawingData.image"
-                class="max-w-full max-h-64 object-contain shadow-sm rounded border"
-              />
+                alt="平面图"
+              >
               <div v-else class="text-gray-400 py-10 flex flex-col gap-1 items-center">
                 <div class="i-carbon-image h-6 w-6" />
                 <span class="text-xs">未获取到平面图数据</span>
