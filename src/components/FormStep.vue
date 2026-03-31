@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
 
 interface DrawingData {
   type: 'rect' | 'trap'
   data: any
   image?: string
+  calculatedArea?: string
 }
 
-defineProps<{
+const props = defineProps<{
   templateValue?: string
   drawingData?: DrawingData
 }>()
@@ -23,6 +24,13 @@ const formData = reactive({
   applicant_name: '',
   business_area: '',
 })
+
+// 自动填充矩形面积
+watch(() => props.drawingData, (newVal) => {
+  if (newVal?.type === 'rect' && newVal.calculatedArea) {
+    formData.business_area = newVal.calculatedArea
+  }
+}, { immediate: true })
 
 defineExpose({
   formData,

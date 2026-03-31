@@ -8,11 +8,21 @@ const trapRef = ref()
 
 defineExpose({
   getShapeData: () => {
-    const compRef = shapeType.value === 'rect' ? rectRef.value : trapRef.value
+    const isRect = shapeType.value === 'rect'
+    const compRef = isRect ? rectRef.value : trapRef.value
+    const data = isRect ? rectRef.value?.rect : trapRef.value?.trap
+
+    // 如果是矩形，自动计算面积
+    let area: string | undefined
+    if (isRect && data) {
+      area = (Number(data.w) * Number(data.h)).toFixed(2)
+    }
+
     return {
       type: shapeType.value,
-      data: shapeType.value === 'rect' ? { ...rectRef.value?.rect } : { ...trapRef.value?.trap },
-      image: compRef?.toDataURL()
+      data: { ...data },
+      image: compRef?.toDataURL(),
+      calculatedArea: area,
     }
   },
 })
