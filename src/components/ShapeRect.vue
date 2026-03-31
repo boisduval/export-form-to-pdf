@@ -12,11 +12,11 @@ const rect = ref(props.modelValue || { w: 40, h: 30 })
 const canvasEl = shallowRef<HTMLCanvasElement | null>(null)
 const canvas = shallowRef<Canvas | null>(null)
 let roomGroup: (Rect | IText)[] = [] // 记录房间轮廓相关的对象
-let cabinetRect: Rect | null = null // 烟柜方框
-let cabinetLabel: IText | null = null // 烟柜文字
+const activeObject = shallowRef<any>(null)
 
 const primaryColor = '#3B66F5'
 const redColor = '#ef4444'
+const doorColor = '#9CA3AF'
 
 /**
  * 核心逻辑：绘制房间轮廓及标注
@@ -112,38 +112,62 @@ function initCanvas() {
     selection: false,
   })
 
+  canvas.value.on('selection:created', e => activeObject.value = e.selected?.[0])
+  canvas.value.on('selection:updated', e => activeObject.value = e.selected?.[0])
+  canvas.value.on('selection:cleared', () => activeObject.value = null)
+
   drawRoom()
   addCabinet()
+}
+
+function deleteSelected() {
+  if (!canvas.value || !activeObject.value)
+    return
+
+  const obj = activeObject.value
+  const label = obj.associatedLabel
+
+  // 烟柜不可删除
+  if (label && label.text === '烟柜')
+    return
+
+  if (label) {
+    canvas.value.remove(label)
+  }
+  canvas.value.remove(obj)
+  canvas.value.discardActiveObject()
+  canvas.value.renderAll()
+  activeObject.value = null
 }
 
 function addCabinet() {
   if (!canvas.value)
     return
 
-  // 如果已经存在烟柜，先移除（保持唯一）
-  if (cabinetRect) {
-    canvas.value.remove(cabinetRect, cabinetLabel!)
-  }
+  // 如果已经存在烟柜，则不重复添加
+  const existingCabinet = canvas.value.getObjects().find(obj => (obj as any).associatedLabel?.text === '烟柜')
+  if (existingCabinet)
+    return
 
   // 1. 创建红色边框
-  cabinetRect = new Rect({
+  const cabinet = new Rect({
     left: canvas.value!.getWidth() / 2,
     top: canvas.value!.getHeight() / 2,
     originX: 'center',
     originY: 'center',
-    width: 40,
-    height: 20,
+    width: 60,
+    height: 40,
     fill: 'rgba(239, 68, 68, 0.1)',
     stroke: redColor,
     strokeWidth: 2,
     cornerColor: redColor,
     cornerSize: 8,
     transparentCorners: false,
-
+    strokeUniform: true,
   })
 
-  // 2. 创建文字组件 (不会因为拉伸而变形)
-  cabinetLabel = new IText('烟柜', {
+  // 2. 创建文字组件
+  const label = new IText('烟柜', {
     fontSize: 12,
     fill: redColor,
     fontWeight: 'bold',
@@ -153,31 +177,84 @@ function addCabinet() {
     originY: 'center',
   })
 
-  // 3. 同步位置和角度的函数
+  // 将 label 关联到 cabinet，方便同步和判断类型
+  ;(cabinet as any).associatedLabel = label
+
+  // 3. 同步位置和角度
   const syncLabel = () => {
-    if (!cabinetRect || !cabinetLabel)
-      return
-    const center = cabinetRect.getCenterPoint()
-    cabinetLabel.set({
+    const center = cabinet.getCenterPoint()
+    label.set({
       left: center.x,
       top: center.y,
-      angle: cabinetRect.angle,
+      angle: cabinet.angle,
     })
   }
 
-  // 4. 监听变换
-  cabinetRect.on('moving', syncLabel)
-  cabinetRect.on('scaling', syncLabel)
-  cabinetRect.on('rotating', syncLabel)
+  cabinet.on('moving', syncLabel)
+  cabinet.on('scaling', syncLabel)
+  cabinet.on('rotating', syncLabel)
 
-  canvas.value.add(cabinetRect, cabinetLabel)
-  syncLabel() // 初始同步
-  canvas.value.setActiveObject(cabinetRect)
+  canvas.value.add(cabinet, label)
+  syncLabel()
+  canvas.value.setActiveObject(cabinet)
+  canvas.value.renderAll()
+}
+
+function addDoor() {
+  if (!canvas.value)
+    return
+
+  const door = new Rect({
+    left: canvas.value!.getWidth() / 2,
+    top: canvas.value!.getHeight() / 2,
+    originX: 'center',
+    originY: 'center',
+    width: 30,
+    height: 10,
+    fill: '#ffffff',
+    stroke: doorColor,
+    strokeWidth: 1,
+    cornerColor: doorColor,
+    cornerSize: 8,
+    transparentCorners: false,
+    strokeUniform: true,
+  })
+
+  const label = new IText('大门', {
+    fontSize: 10,
+    fill: doorColor,
+    fontWeight: 'bold',
+    selectable: false,
+    evented: false,
+    originX: 'center',
+    originY: 'center',
+  })
+
+  ;(door as any).associatedLabel = label
+
+  const syncLabel = () => {
+    const center = door.getCenterPoint()
+    label.set({
+      left: center.x,
+      top: center.y,
+      angle: door.angle,
+    })
+  }
+
+  door.on('moving', syncLabel)
+  door.on('scaling', syncLabel)
+  door.on('rotating', syncLabel)
+
+  canvas.value.add(door, label)
+  syncLabel()
+  canvas.value.setActiveObject(door)
   canvas.value.renderAll()
 }
 
 onMounted(() => {
-  setTimeout(initCanvas, 50) // 给 DOM 渲染留一点时间
+  setTimeout(() => {
+    initCanvas()
+  }, 50)
 })
 
 watch(rect, drawRoom, { deep: true })
@@ -202,6 +279,16 @@ defineExpose({
     <!-- Preview Area -->
     <div :class="[readOnly ? 'h-40 border-none rounded-lg' : 'h-64 shadow-sm border rounded-2xl']" class="bg-white flex flex-col items-center justify-center relative overflow-hidden">
       <canvas ref="canvasEl" />
+
+      <!-- Floating Toolbuttons -->
+      <div v-if="!readOnly" class="flex gap-2 bottom-3 right-3 absolute">
+        <van-button v-if="activeObject && activeObject.associatedLabel?.text !== '烟柜'" icon="delete" plain round size="mini" type="danger" @click="deleteSelected">
+          删除
+        </van-button>
+        <van-button icon="plus" plain round size="mini" type="primary" @click="addDoor">
+          添加大门
+        </van-button>
+      </div>
     </div>
 
     <!-- Inputs -->
