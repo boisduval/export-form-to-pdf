@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref, shallowRef, watch } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { Canvas, IText, Rect } from 'fabric'
+import type { FabricObject } from 'fabric'
+
+interface CanvasObject extends FabricObject {
+  associatedLabel?: IText
+}
 
 const props = defineProps<{
   modelValue?: { w: number, h: number }
@@ -112,8 +117,8 @@ function initCanvas() {
     selection: false,
   })
 
-  canvas.value.on('selection:created', e => activeObject.value = e.selected?.[0])
-  canvas.value.on('selection:updated', e => activeObject.value = e.selected?.[0])
+  canvas.value.on('selection:created', e => activeObject.value = e.selected?.[0] as CanvasObject)
+  canvas.value.on('selection:updated', e => activeObject.value = e.selected?.[0] as CanvasObject)
   canvas.value.on('selection:cleared', () => activeObject.value = null)
 
   drawRoom()
@@ -124,7 +129,7 @@ function deleteSelected() {
   if (!canvas.value || !activeObject.value)
     return
 
-  const obj = activeObject.value
+  const obj = activeObject.value as CanvasObject
   const label = obj.associatedLabel
 
   // 烟柜不可删除
@@ -145,7 +150,7 @@ function addCabinet() {
     return
 
   // 如果已经存在烟柜，则不重复添加
-  const existingCabinet = canvas.value.getObjects().find(obj => (obj as any).associatedLabel?.text === '烟柜')
+  const existingCabinet = canvas.value.getObjects().find(obj => (obj as CanvasObject).associatedLabel?.text === '烟柜')
   if (existingCabinet)
     return
 
@@ -178,7 +183,7 @@ function addCabinet() {
   })
 
   // 将 label 关联到 cabinet，方便同步和判断类型
-  ;(cabinet as any).associatedLabel = label
+  ;(cabinet as CanvasObject).associatedLabel = label
 
   // 3. 同步位置和角度
   const syncLabel = () => {
@@ -230,7 +235,7 @@ function addDoor() {
     originY: 'center',
   })
 
-  ;(door as any).associatedLabel = label
+  ;(door as CanvasObject).associatedLabel = label
 
   const syncLabel = () => {
     const center = door.getCenterPoint()
@@ -257,6 +262,13 @@ onMounted(() => {
   }, 50)
 })
 
+onUnmounted(() => {
+  if (canvas.value) {
+    canvas.value.dispose()
+    canvas.value = null
+  }
+})
+
 watch(rect, drawRoom, { deep: true })
 
 defineExpose({
@@ -279,16 +291,25 @@ defineExpose({
     <!-- Preview Area -->
     <div :class="[readOnly ? 'h-40 border-none rounded-lg' : 'h-64 shadow-sm border rounded-2xl']" class="bg-white flex flex-col items-center justify-center relative overflow-hidden">
       <canvas ref="canvasEl" />
+    </div>
 
-      <!-- Floating Toolbuttons -->
-      <div v-if="!readOnly" class="flex gap-2 bottom-3 right-3 absolute">
-        <van-button v-if="activeObject && activeObject.associatedLabel?.text !== '烟柜'" icon="delete" plain round size="mini" type="danger" @click="deleteSelected">
-          删除
-        </van-button>
-        <van-button icon="plus" plain round size="mini" type="primary" @click="addDoor">
-          添加大门
-        </van-button>
-      </div>
+    <!-- Actions Toolbar -->
+    <div v-if="!readOnly" class="px-1 gap-3 grid grid-cols-2">
+      <van-button icon="plus" plain size="small" type="primary" block class="shadow-sm !rounded-xl" @click="addDoor">
+        添加大门
+      </van-button>
+      <van-button
+        v-if="activeObject && activeObject.associatedLabel?.text !== '烟柜'"
+        icon="delete"
+        plain
+        size="small"
+        type="danger"
+        block
+        class="shadow-sm !rounded-xl"
+        @click="deleteSelected"
+      >
+        删除选中
+      </van-button>
     </div>
 
     <!-- Inputs -->
