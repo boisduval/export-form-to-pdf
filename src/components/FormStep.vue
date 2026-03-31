@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import ShapeRect from './ShapeRect.vue'
-import ShapeTrap from './ShapeTrap.vue'
 
 interface DrawingData {
   type: 'rect' | 'trap'
   data: any
+  image?: string
 }
 
 defineProps<{
@@ -35,23 +34,18 @@ defineExpose({
     <div class="border border-gray-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
       <van-cell-group v-if="templateValue === 'change'" :border="false">
         <van-field v-model="formData.applicant_name" label="申请人" placeholder="请输入姓名" />
-        <van-field v-model="formData.business_area" label="经验面积" placeholder="请输入面积" type="number">
+        <van-field v-model="formData.business_area" label="经营面积" placeholder="请输入面积" type="number">
           <template #right-icon>
             ㎡
           </template>
         </van-field>
-        <van-cell title="平面图">
+        <van-cell title="平面图预览">
           <template #label>
-            <div class="mt-2 border rounded-lg bg-gray-50 flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden">
-              <ShapeRect
-                v-if="drawingData?.type === 'rect'"
-                :model-value="drawingData.data"
-                read-only
-              />
-              <ShapeTrap
-                v-else-if="drawingData?.type === 'trap'"
-                :model-value="drawingData.data"
-                read-only
+            <div class="mt-2 border rounded-lg bg-white flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden p-2">
+              <img
+                v-if="drawingData?.image"
+                :src="drawingData.image"
+                class="max-w-full max-h-64 object-contain shadow-sm rounded border"
               />
               <div v-else class="text-gray-400 py-10 flex flex-col gap-1 items-center">
                 <div class="i-carbon-image h-6 w-6" />
