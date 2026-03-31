@@ -46,7 +46,7 @@ function drawRoom() {
     return
 
   // 3. 计算缩放比，确保始终完整显示在画布内
-  const padding = 20
+  const padding = 10
   const rw = Number(rect.value.w) || 1
   const rh = Number(rect.value.h) || 1
 
@@ -102,8 +102,10 @@ function addCabinet() {
 
   // 1. 创建红色边框
   cabinetRect = new Rect({
-    left: 150,
-    top: 150,
+    left: canvas.value!.getWidth() / 2,
+    top: canvas.value!.getHeight() / 2,
+    originX: 'center',
+    originY: 'center',
     width: 40,
     height: 20,
     fill: 'rgba(239, 68, 68, 0.1)',
@@ -112,6 +114,7 @@ function addCabinet() {
     cornerColor: redColor,
     cornerSize: 8,
     transparentCorners: false,
+
   })
 
   // 2. 创建文字组件 (不会因为拉伸而变形)
