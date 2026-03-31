@@ -3,9 +3,13 @@ import Docxtemplater from 'docxtemplater'
 import ImageModule from 'docxtemplater-image-module-free'
 
 /**
- * 辅助函数：Base64 转 ArrayBuffer
+ * 辅助函数：Base64 转 Uint8Array (二进制)
  */
 function base64ToBuffer(dataUrl: string) {
+  if (!dataUrl || !dataUrl.includes(',')) {
+    console.error('Empty or invalid dataUrl provided to base64ToBuffer')
+    return new Uint8Array(0)
+  }
   const base64 = dataUrl.split(',')[1]
   const binaryString = window.atob(base64)
   const len = binaryString.length
@@ -13,7 +17,7 @@ function base64ToBuffer(dataUrl: string) {
   for (let i = 0; i < len; i++) {
     bytes[i] = binaryString.charCodeAt(i)
   }
-  return bytes.buffer
+  return bytes
 }
 
 /**
@@ -52,7 +56,7 @@ export async function generateDocx(
   // layout_image 对应模板中的 {%layout_image}
   const docData = {
     ...formData,
-    layout_image: imageData,
+    location_map: imageData,
   }
 
   // 5. 渲染文档
