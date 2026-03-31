@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { Canvas, IText, Rect } from 'fabric'
 import type { FabricObject } from 'fabric'
+import ThreeDPreview from './ThreeDPreview.vue'
 
 interface CanvasObject extends FabricObject {
   associatedLabel?: IText
@@ -256,6 +257,44 @@ function addDoor() {
   canvas.value.renderAll()
 }
 
+const show3D = ref(false)
+
+function getPreviewData() {
+  if (!canvas.value)
+    return null
+
+  const cw = canvas.value.getWidth()
+  const ch = canvas.value.getHeight()
+  const padding = 40
+  const rw = Number(rect.value.w) || 1
+  const rh = Number(rect.value.h) || 1
+  const scale = Math.min((cw - padding * 2) / rw, (ch - padding * 2) / rh)
+  const sw = rw * scale
+  const sh = rh * scale
+
+  const objects = canvas.value.getObjects().filter(o => (o as any).associatedLabel)
+  const subObjects = objects.map(o => ({
+    type: (o as any).associatedLabel.text,
+    left: o.left,
+    top: o.top,
+    width: (o as any).width * (o as any).scaleX,
+    height: (o as any).height * (o as any).scaleY,
+    angle: o.angle,
+  }))
+
+  return {
+    type: 'rect',
+    canvasWidth: cw,
+    canvasHeight: ch,
+    data: {
+      ...rect.value,
+      roomPixelWidth: sw,
+      roomPixelHeight: sh,
+    },
+    subObjects,
+  }
+}
+
 onMounted(() => {
   setTimeout(() => {
     initCanvas()
@@ -289,8 +328,23 @@ defineExpose({
 <template>
   <div class="flex flex-col gap-4">
     <!-- Preview Area -->
-    <div :class="[readOnly ? 'h-40 border-none rounded-lg' : 'h-64 shadow-sm border rounded-2xl']" class="bg-white flex flex-col items-center justify-center relative overflow-hidden">
-      <canvas ref="canvasEl" />
+    <div :class="[readOnly ? 'h-40 border-none rounded-lg' : 'h-64 shadow-sm border rounded-2xl']" class="p-4 bg-white flex flex-col items-center justify-center relative overflow-hidden">
+      <div class="canvas-wrapper">
+        <canvas ref="canvasEl" />
+      </div>
+
+      <!-- 3D Toggle Overlay -->
+      <div v-if="!readOnly" class="rounded-full shadow-sm right-3 top-3 absolute z-10 overflow-hidden">
+        <van-button
+          size="mini"
+          icon="apps-o"
+          type="primary"
+          class="!px-3 !h-7"
+          @click="show3D = true"
+        >
+          3D 预览
+        </van-button>
+      </div>
     </div>
 
     <!-- Actions Toolbar -->
@@ -312,6 +366,9 @@ defineExpose({
       </van-button>
     </div>
 
+    <!-- 3D Preview Modal -->
+    <ThreeDPreview v-model:show="show3D" :data="getPreviewData()" />
+
     <!-- Inputs -->
     <div v-if="!readOnly" class="border-gray-50 rounded-xl bg-white flex flex-col shadow-sm overflow-hidden">
       <van-cell-group :border="false">
@@ -323,6 +380,18 @@ defineExpose({
 </template>
 
 <style scoped>
+.canvas-wrapper {
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.is-3d {
+  transform: perspective(1200px) rotateX(50deg) rotateZ(-20deg);
+  filter: drop-shadow(0 20px 30px rgba(59, 102, 245, 0.2));
+}
+
 :deep(.canvas-container) {
   margin: 0 auto;
 }
