@@ -79,7 +79,7 @@ function drawRoom() {
     // 长度标注 (上边上侧)
     new IText(`${rw}m`, {
       left: cw / 2,
-      top: ch / 2 - sh / 2 - 12,
+      top: ch / 2 - sh / 2 - 25,
       originX: 'center',
       originY: 'center',
       fontSize: 12,
@@ -89,7 +89,7 @@ function drawRoom() {
     }),
     // 宽度标注 (左边左侧)
     new IText(`${rh}m`, {
-      left: cw / 2 - sw / 2 - 12,
+      left: cw / 2 - sw / 2 - 25,
       top: ch / 2,
       originX: 'center',
       originY: 'center',
