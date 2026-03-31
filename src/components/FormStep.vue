@@ -32,7 +32,7 @@ const formData = reactive({
 
 // 自动填充矩形面积
 watch(() => props.drawingData, (newVal) => {
-  if ((props.templateValue === 'change' || props.templateValue === 'normal') && newVal?.type === 'rect' && newVal.calculatedArea) {
+  if (['change', 'normal', 'large', 'queue'].includes(props.templateValue || '') && newVal?.type === 'rect' && newVal.calculatedArea) {
     formData.business_area = newVal.calculatedArea
   }
 }, { immediate: true })
@@ -45,7 +45,7 @@ defineExpose({
 <template>
   <div class="mt-2 flex flex-col">
     <div class="border border-gray-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
-      <van-cell-group v-if="templateValue === 'normal'" :border="false">
+      <van-cell-group v-if="templateValue === 'normal' || templateValue === 'queue'" :border="false">
         <van-field v-model="formData.applicant_name" label="申请人" placeholder="请输入姓名" />
         <van-field v-model="formData.business_area" label="经营面积" placeholder="请输入面积" type="number">
           <template #right-icon>
@@ -57,6 +57,34 @@ defineExpose({
         <van-field v-model="formData.existing_shops" label="已设置零售店" placeholder="请输入数量" type="number" />
         <van-field v-model="formData.license_count" label="办证数" placeholder="不受合理容量限制办证数" type="number" />
         <van-field v-model="formData.waiting_count" label="轮候人数" placeholder="请输入轮候人数" type="number" />
+        
+        <van-cell title="平面图预览">
+          <template #label>
+            <div class="mt-2 p-2 border rounded-lg bg-white flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden">
+              <img
+                v-if="drawingData?.image"
+                :src="drawingData.image"
+                alt="平面图"
+              >
+              <div v-else class="text-gray-400 py-10 flex flex-col gap-1 items-center">
+                <div class="i-carbon-image h-6 w-6" />
+                <span class="text-xs">未获取到平面图数据</span>
+              </div>
+            </div>
+          </template>
+        </van-cell>
+      </van-cell-group>
+
+      <van-cell-group v-else-if="templateValue === 'large'" :border="false">
+        <van-field v-model="formData.applicant_name" label="申请人" placeholder="请输入姓名" />
+        <van-field v-model="formData.business_area" label="经营面积" placeholder="请输入面积" type="number">
+          <template #right-icon>
+            ㎡
+          </template>
+        </van-field>
+        <van-field v-model="formData.street_address" label="实际地址" placeholder="请输入完整地址" />
+        <van-field v-model="formData.layout_capacity" label="布局容量" placeholder="请输入容量" type="number" />
+        <van-field v-model="formData.existing_shops" label="已设置零售店" placeholder="请输入数量" type="number" />
         
         <van-cell title="平面图预览">
           <template #label>

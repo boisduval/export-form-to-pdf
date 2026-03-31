@@ -19,8 +19,8 @@ const steps = [
 const templates = [
   { id: 1, name: '延续变更', type: 'DOCX', value: 'change' },
   { id: 2, name: '实地核查普通版', type: 'DOCX', value: 'normal' },
-  { id: 3, name: '新实地勘验普通版 1000平方米', type: 'DOCX' },
-  { id: 4, name: '实地核查普通版 (排队)', type: 'DOCX' },
+  { id: 3, name: '新实地勘验普通版 1000平方米', type: 'DOCX', value: 'large' },
+  { id: 4, name: '实地核查普通版 (排队)', type: 'DOCX', value: 'queue' },
 ]
 
 const selectedTemplateName = computed(() => {
