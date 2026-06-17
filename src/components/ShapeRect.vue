@@ -16,8 +16,8 @@ const {
   canvasEl,
   canvas,
   initCanvas,
-  addCabinet,
-  addDoor,
+  presetCabinetAndDoor,
+  repositionPresetObjects,
 } = useShapeCanvas()
 
 let roomGroup: (Rect | IText)[] = [] // 记录房间轮廓相关的对象
@@ -103,6 +103,14 @@ function drawRoom() {
   ]
   canvas.value.add(...roomGroup)
   roomGroup.forEach(obj => canvas.value?.sendObjectToBack(obj))
+
+  // Dynamically reposition cabinet and door to cling to walls
+  const cabX = cw / 2 - sw / 2
+  const cabY = ch / 2 - sh / 2
+  const doorX = cw / 2 - sw / 2
+  const doorY = ch / 2 + sh / 2
+
+  repositionPresetObjects(cabX, cabY, doorX, doorY)
   canvas.value.renderAll()
 }
 
@@ -110,8 +118,21 @@ function initRectCanvas() {
   initCanvas()
   drawRoom()
   if (canvas.value) {
-    addCabinet(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2)
-    addDoor(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2 + 80)
+    const cw = canvas.value.getWidth()
+    const ch = canvas.value.getHeight()
+    const padding = 40
+    const rw = Number(rect.value.w) || 1
+    const rh = Number(rect.value.h) || 1
+    const scale = Math.min((cw - padding * 2) / rw, (ch - padding * 2) / rh)
+    const sw = rw * scale
+    const sh = rh * scale
+
+    presetCabinetAndDoor(
+      cw / 2 - sw / 2,
+      ch / 2 - sh / 2,
+      cw / 2 - sw / 2,
+      ch / 2 + sh / 2,
+    )
   }
 }
 

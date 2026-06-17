@@ -98,8 +98,8 @@ export function useShapeCanvas() {
       top: cTop,
       originX: 'center',
       originY: 'center',
-      width: 60,
-      height: 40,
+      width: 45,
+      height: 30,
       fill: 'rgba(239, 68, 68, 0.1)',
       stroke: redColor,
       strokeWidth: 2,
@@ -152,8 +152,8 @@ export function useShapeCanvas() {
       top: dTop,
       originX: 'center',
       originY: 'center',
-      width: 30,
-      height: 10,
+      width: 50,
+      height: 15,
       fill: '#ffffff',
       stroke: doorColor,
       strokeWidth: 1,
@@ -194,6 +194,30 @@ export function useShapeCanvas() {
     canvas.value.renderAll()
   }
 
+  function presetCabinetAndDoor(cabX: number, cabY: number, doorX: number, doorY: number) {
+    addCabinet(cabX + 22.5, cabY + 15)
+    addDoor(doorX + 25, doorY - 7.5)
+  }
+
+  function repositionPresetObjects(cabX: number, cabY: number, doorX: number, doorY: number) {
+    if (!canvas.value)
+      return
+
+    const cabinet = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '烟柜')
+    if (cabinet) {
+      cabinet.set({ left: cabX + 22.5, top: cabY + 15 })
+      cabinet.setCoords()
+      ;(cabinet as any).associatedLabel?.set({ left: cabX + 22.5, top: cabY + 15 })
+    }
+
+    const door = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '大门')
+    if (door) {
+      door.set({ left: doorX + 25, top: doorY - 7.5 })
+      door.setCoords()
+      ;(door as any).associatedLabel?.set({ left: doorX + 25, top: doorY - 7.5 })
+    }
+  }
+
   onUnmounted(() => {
     if (canvas.value) {
       canvas.value.dispose()
@@ -210,5 +234,7 @@ export function useShapeCanvas() {
     deleteSelected,
     addCabinet,
     addDoor,
+    presetCabinetAndDoor,
+    repositionPresetObjects,
   }
 }

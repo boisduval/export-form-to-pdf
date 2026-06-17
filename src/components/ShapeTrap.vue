@@ -16,8 +16,8 @@ const {
   canvasEl,
   canvas,
   initCanvas,
-  addCabinet,
-  addDoor,
+  presetCabinetAndDoor,
+  repositionPresetObjects,
 } = useShapeCanvas()
 
 let roomGroup: (Polygon | IText)[] = [] // 记录房间轮廓相关的对象
@@ -129,9 +129,16 @@ function drawRoom() {
       evented: false,
     }),
   ]
-
   canvas.value.add(...roomGroup)
   roomGroup.forEach(obj => canvas.value?.sendObjectToBack(obj))
+
+  // Dynamically reposition cabinet and door to cling to walls
+  const cabX = L + (soff - sminX)
+  const cabY = ch / 2 - sh / 2
+  const doorX = L - sminX
+  const doorY = ch / 2 + sh / 2
+
+  repositionPresetObjects(cabX, cabY, doorX, doorY)
   canvas.value.renderAll()
 }
 
@@ -139,8 +146,31 @@ function initTrapCanvas() {
   initCanvas()
   drawRoom()
   if (canvas.value) {
-    addCabinet(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2)
-    addDoor(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2 + 80)
+    const cw = canvas.value.getWidth()
+    const ch = canvas.value.getHeight()
+    const padding = 40
+    const tt = Number(trap.value.top) || 1
+    const tb = Number(trap.value.bottom) || 1
+    const th = Number(trap.value.h) || 1
+    const to = Number(trap.value.offset) || 0
+
+    const minX = Math.min(0, to)
+    const maxX = Math.max(tb, to + tt)
+    const actualW = maxX - minX
+    const scale = Math.min((cw - padding * 2) / actualW, (ch - padding * 2) / th)
+
+    const sh = th * scale
+    const soff = to * scale
+    const sw_max = actualW * scale
+    const sminX = minX * scale
+    const L = cw / 2 - sw_max / 2
+
+    const cabX = L + (soff - sminX)
+    const cabY = ch / 2 - sh / 2
+    const doorX = L - sminX
+    const doorY = ch / 2 + sh / 2
+
+    presetCabinetAndDoor(cabX, cabY, doorX, doorY)
   }
 }
 

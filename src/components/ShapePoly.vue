@@ -16,8 +16,8 @@ const {
   canvasEl,
   canvas,
   initCanvas,
-  addCabinet,
-  addDoor,
+  presetCabinetAndDoor,
+  repositionPresetObjects,
 } = useShapeCanvas()
 
 // 模态框控制
@@ -284,6 +284,21 @@ function rebuildShape(snappedPoint: any = null, skipViewportUpdate = false) {
       a += points[i].x * next.y - next.x * points[i].y
     }
     calculatedArea.value = (Math.abs(a) / 2) / (M_SCALE * M_SCALE)
+
+    // Dynamically reposition cabinet and door to cling to walls
+    let minX = Infinity
+    let minY = Infinity
+    let maxY = -Infinity
+    points.forEach((p) => {
+      if (p.x < minX)
+        minX = p.x
+      if (p.y < minY)
+        minY = p.y
+      if (p.y > maxY)
+        maxY = p.y
+    })
+
+    repositionPresetObjects(minX, minY, minX, maxY)
   }
   else {
     calculatedArea.value = 0
@@ -563,8 +578,19 @@ function closeShape() {
     shape.value.isClosed = true
     rebuildShape()
     if (canvas.value) {
-      addCabinet(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2)
-      addDoor(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2 + 80)
+      const pts = shape.value.points
+      let minX = Infinity
+      let minY = Infinity
+      let maxY = -Infinity
+      pts.forEach((p) => {
+        if (p.x < minX)
+          minX = p.x
+        if (p.y < minY)
+          minY = p.y
+        if (p.y > maxY)
+          maxY = p.y
+      })
+      presetCabinetAndDoor(minX, minY, minX, maxY)
     }
   }
 }
