@@ -668,18 +668,18 @@ defineExpose({
         <!-- Polygon Actions -->
         <div class="flex gap-2">
           <button
-            class="text-xs font-bold px-3 py-2 rounded-xl flex flex-1 gap-1.5 cursor-pointer shadow-xs transition-all duration-200 items-center justify-center active:scale-95"
+            class="text-xs font-bold px-3 py-2.5 rounded-2xl flex flex-1 gap-1.5 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center active:scale-95"
             :class="isSnapEnabled
-              ? 'bg-amber-50 text-amber-600 border border-amber-200/60'
-              : 'bg-slate-50 text-slate-500 border border-slate-200/50'"
+              ? 'bg-amber-50 text-amber-600 border border-amber-200/50 shadow-amber-500/5'
+              : 'bg-slate-50 text-slate-500 border border-slate-200/40'"
             @click="isSnapEnabled = !isSnapEnabled"
           >
-            <span class="rounded-full h-2 w-2" :class="isSnapEnabled ? 'bg-amber-500 shadow-sm shadow-amber-500/50 animate-pulse' : 'bg-slate-300'" />
+            <span class="rounded-full h-1.5 w-1.5" :class="isSnapEnabled ? 'bg-amber-500 shadow-sm shadow-amber-500/50 animate-pulse' : 'bg-slate-300'" />
             吸附: {{ isSnapEnabled ? '开' : '关' }}
           </button>
           <button
             v-if="!shape.isClosed"
-            class="text-xs text-emerald-600 font-bold px-3 py-2 border border-emerald-200 rounded-xl bg-emerald-50/70 flex flex-1 gap-1 cursor-pointer shadow-xs transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/50 disabled:bg-slate-50 hover:bg-emerald-100/80 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 disabled:scale-100"
+            class="text-xs text-emerald-600 font-bold px-3 py-2.5 border border-emerald-200/50 rounded-2xl bg-emerald-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 hover:bg-emerald-100/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
             :disabled="shape.points.length < 3"
             @click="closeShape"
           >
@@ -687,7 +687,7 @@ defineExpose({
             闭合
           </button>
           <button
-            class="text-xs text-blue-600 font-bold px-3 py-2 border border-blue-200 rounded-xl bg-blue-50/70 flex flex-1 gap-1 cursor-pointer shadow-xs transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/50 disabled:bg-slate-50 hover:bg-blue-100/80 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 disabled:scale-100"
+            class="text-xs text-blue-600 font-bold px-3 py-2.5 border border-blue-200/50 rounded-2xl bg-blue-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 hover:bg-blue-100/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
             :disabled="shape.points.length === 0"
             @click="undo"
           >
@@ -695,7 +695,7 @@ defineExpose({
             撤销
           </button>
           <button
-            class="text-xs text-rose-600 font-bold px-3 py-2 border border-rose-200 rounded-xl bg-rose-50/70 flex flex-1 gap-1 cursor-pointer shadow-xs transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/50 disabled:bg-slate-50 hover:bg-rose-100/80 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 disabled:scale-100"
+            class="text-xs text-rose-600 font-bold px-3 py-2.5 border border-rose-200/50 rounded-2xl bg-rose-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 hover:bg-rose-100/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
             :disabled="shape.points.length === 0"
             @click="clear"
           >
