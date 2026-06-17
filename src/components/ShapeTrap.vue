@@ -134,49 +134,24 @@ function drawRoom() {
   canvas.value.add(...roomGroup)
   roomGroup.forEach(obj => canvas.value?.sendObjectToBack(obj))
 
-  // Dynamically reposition cabinet and door to cling to walls ONLY when canvas size changes (e.g. initial load or resize)
-  if (cw !== lastCw || ch !== lastCh) {
+  // 预设大门和烟柜（仅在画布尺寸变化或首次渲染时定位/更新）
+  if (cw > 100 && ch > 100 && (cw !== lastCw || ch !== lastCh)) {
     lastCw = cw
     lastCh = ch
     const cabX = L + (soff - sminX)
     const cabY = ch / 2 - sh / 2
     const doorX = L - sminX
     const doorY = ch / 2 + sh / 2
+    presetCabinetAndDoor(cabX, cabY, doorX, doorY)
     repositionPresetObjects(cabX, cabY, doorX, doorY)
   }
+
   canvas.value.renderAll()
 }
 
 function initTrapCanvas() {
   initCanvas()
   drawRoom()
-  if (canvas.value) {
-    const cw = canvas.value.getWidth()
-    const ch = canvas.value.getHeight()
-    const padding = 40
-    const tt = Number(trap.value.top) || 1
-    const tb = Number(trap.value.bottom) || 1
-    const th = Number(trap.value.h) || 1
-    const to = Number(trap.value.offset) || 0
-
-    const minX = Math.min(0, to)
-    const maxX = Math.max(tb, to + tt)
-    const actualW = maxX - minX
-    const scale = Math.min((cw - padding * 2) / actualW, (ch - padding * 2) / th)
-
-    const sh = th * scale
-    const soff = to * scale
-    const sw_max = actualW * scale
-    const sminX = minX * scale
-    const L = cw / 2 - sw_max / 2
-
-    const cabX = L + (soff - sminX)
-    const cabY = ch / 2 - sh / 2
-    const doorX = L - sminX
-    const doorY = ch / 2 + sh / 2
-
-    presetCabinetAndDoor(cabX, cabY, doorX, doorY)
-  }
 }
 
 onMounted(() => {

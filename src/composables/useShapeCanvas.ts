@@ -240,6 +240,29 @@ export function useShapeCanvas() {
     }
   }
 
+  function removeCabinetAndDoor() {
+    if (!canvas.value)
+      return
+
+    const cabinet = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '烟柜')
+    if (cabinet) {
+      if ((cabinet as any).associatedLabel) {
+        canvas.value.remove((cabinet as any).associatedLabel)
+      }
+      canvas.value.remove(cabinet)
+    }
+
+    const door = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '大门')
+    if (door) {
+      if ((door as any).associatedLabel) {
+        canvas.value.remove((door as any).associatedLabel)
+      }
+      canvas.value.remove(door)
+    }
+
+    canvas.value.renderAll()
+  }
+
   onUnmounted(() => {
     if (canvas.value) {
       canvas.value.dispose()
@@ -258,5 +281,6 @@ export function useShapeCanvas() {
     addDoor,
     presetCabinetAndDoor,
     repositionPresetObjects,
+    removeCabinetAndDoor,
   }
 }

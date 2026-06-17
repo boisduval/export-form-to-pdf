@@ -21,6 +21,8 @@ const {
 } = useShapeCanvas()
 
 let roomGroup: (Rect | IText)[] = [] // 记录房间轮廓相关的对象
+let lastCw = 0
+let lastCh = 0
 
 const primaryColor = '#3B66F5'
 
@@ -104,36 +106,24 @@ function drawRoom() {
   canvas.value.add(...roomGroup)
   roomGroup.forEach(obj => canvas.value?.sendObjectToBack(obj))
 
-  // Dynamically reposition cabinet and door to cling to walls
-  const cabX = cw / 2 - sw / 2
-  const cabY = ch / 2 - sh / 2
-  const doorX = cw / 2 - sw / 2
-  const doorY = ch / 2 + sh / 2
+  // 预设大门和烟柜（仅在画布尺寸变化或首次渲染时定位/更新）
+  if (cw > 100 && ch > 100 && (cw !== lastCw || ch !== lastCh)) {
+    lastCw = cw
+    lastCh = ch
+    const cabX = cw / 2 - sw / 2
+    const cabY = ch / 2 - sh / 2
+    const doorX = cw / 2 - sw / 2
+    const doorY = ch / 2 + sh / 2
+    presetCabinetAndDoor(cabX, cabY, doorX, doorY)
+    repositionPresetObjects(cabX, cabY, doorX, doorY)
+  }
 
-  repositionPresetObjects(cabX, cabY, doorX, doorY)
   canvas.value.renderAll()
 }
 
 function initRectCanvas() {
   initCanvas()
   drawRoom()
-  if (canvas.value) {
-    const cw = canvas.value.getWidth()
-    const ch = canvas.value.getHeight()
-    const padding = 40
-    const rw = Number(rect.value.w) || 1
-    const rh = Number(rect.value.h) || 1
-    const scale = Math.min((cw - padding * 2) / rw, (ch - padding * 2) / rh)
-    const sw = rw * scale
-    const sh = rh * scale
-
-    presetCabinetAndDoor(
-      cw / 2 - sw / 2,
-      ch / 2 - sh / 2,
-      cw / 2 - sw / 2,
-      ch / 2 + sh / 2,
-    )
-  }
 }
 
 const show3D = ref(false)

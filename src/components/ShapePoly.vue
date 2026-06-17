@@ -17,7 +17,7 @@ const {
   canvas,
   initCanvas,
   presetCabinetAndDoor,
-  repositionPresetObjects,
+  removeCabinetAndDoor,
 } = useShapeCanvas()
 
 // 模态框控制
@@ -284,21 +284,6 @@ function rebuildShape(snappedPoint: any = null, skipViewportUpdate = false) {
       a += points[i].x * next.y - next.x * points[i].y
     }
     calculatedArea.value = (Math.abs(a) / 2) / (M_SCALE * M_SCALE)
-
-    // Dynamically reposition cabinet and door to cling to walls
-    let minX = Infinity
-    let minY = Infinity
-    let maxY = -Infinity
-    points.forEach((p) => {
-      if (p.x < minX)
-        minX = p.x
-      if (p.y < minY)
-        minY = p.y
-      if (p.y > maxY)
-        maxY = p.y
-    })
-
-    repositionPresetObjects(minX, minY, minX, maxY)
   }
   else {
     calculatedArea.value = 0
@@ -336,6 +321,21 @@ function initPolyCanvas() {
     canvas.value.on('mouse:up', handleMouseUp)
   }
   rebuildShape()
+  if (shape.value.isClosed && canvas.value) {
+    const pts = shape.value.points
+    let minX = Infinity
+    let minY = Infinity
+    let maxY = -Infinity
+    pts.forEach((p) => {
+      if (p.x < minX)
+        minX = p.x
+      if (p.y < minY)
+        minY = p.y
+      if (p.y > maxY)
+        maxY = p.y
+    })
+    presetCabinetAndDoor(minX, minY, minX, maxY)
+  }
 }
 
 function getSnappedPoint(rawPos: { x: number, y: number }, ignoreIndices: number[] = []) {
@@ -554,6 +554,7 @@ function applyNewLength() {
 function undo() {
   if (shape.value.isClosed) {
     shape.value.isClosed = false
+    removeCabinetAndDoor()
   }
   else {
     shape.value.points.pop()
@@ -565,6 +566,7 @@ function clear() {
   shape.value.points = []
   shape.value.isClosed = false
   isDrawingNew.value = false
+  removeCabinetAndDoor()
   canvas.value?.getObjects().forEach((obj: any) => {
     if (obj.name?.startsWith('room_')) {
       canvas.value?.remove(obj)
