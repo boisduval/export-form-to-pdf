@@ -481,10 +481,23 @@ function handleMouseUp(opt: any) {
   const hitRadius = HIT_RADIUS_SCREEN / canvas.value!.getZoom()
 
   if (isDrawingNew.value && tempEndPoint.value) {
-    const firstPt = points[0]
     // 闭合检查 (拉到起点松手)
-    if (points.length >= 3 && Math.hypot(tempEndPoint.value.x - firstPt.x, tempEndPoint.value.y - firstPt.y) < hitRadius) {
+    if (points.length >= 3 && Math.hypot(tempEndPoint.value.x - points[0].x, tempEndPoint.value.y - points[0].y) < hitRadius) {
       shape.value.isClosed = true
+      if (canvas.value) {
+        let minX = Infinity
+        let minY = Infinity
+        let maxY = -Infinity
+        points.forEach((p) => {
+          if (p.x < minX)
+            minX = p.x
+          if (p.y < minY)
+            minY = p.y
+          if (p.y > maxY)
+            maxY = p.y
+        })
+        presetCabinetAndDoor(minX, minY, minX, maxY)
+      }
     }
     else {
       // 逻辑同步 Demo：追加新点
