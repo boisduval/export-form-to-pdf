@@ -130,11 +130,16 @@ export function useShapeCanvas() {
 
     const syncLabel = () => {
       const center = cabinet.getCenterPoint()
+      const zoom = canvas.value?.getZoom() || 1
       label.set({
         left: center.x,
         top: center.y,
         angle: cabinet.angle,
+        fontSize: 12 / zoom,
       })
+      if (canvas.value) {
+        canvas.value.bringObjectToFront(label)
+      }
     }
 
     cabinet.on('moving', syncLabel)
@@ -199,11 +204,16 @@ export function useShapeCanvas() {
 
     const syncLabel = () => {
       const center = door.getCenterPoint()
+      const zoom = canvas.value?.getZoom() || 1
       label.set({
         left: center.x,
         top: center.y,
         angle: door.angle,
+        fontSize: 10 / zoom,
       })
+      if (canvas.value) {
+        canvas.value.bringObjectToFront(label)
+      }
     }
 
     door.on('moving', syncLabel)
