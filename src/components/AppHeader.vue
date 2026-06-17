@@ -16,9 +16,8 @@ defineProps<{
       {{ steps[active]?.title || '选择模板' }}
     </h1>
     <div class="flex gap-3 items-center">
-      <!-- Selected Template Label Pill -->
       <div
-        v-if="selectedTemplateName && active === 0"
+        v-if="selectedTemplateName"
         class="px-3 py-1 rounded-full bg-white/25 flex shadow-sm items-center backdrop-blur-sm"
       >
         <span class="text-xs text-white font-semibold max-w-28 truncate">
