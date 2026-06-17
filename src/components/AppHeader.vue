@@ -11,32 +11,26 @@ defineProps<{
 </script>
 
 <template>
-  <header class="px-4 bg-white flex h-12 shadow-sm/2 items-center top-0 justify-between relative sticky z-100 overflow-hidden">
-    <div class="flex gap-3 items-center overflow-hidden">
-      <h1 class="text-[15px] text-gray-800 font-extrabold truncate">
-        {{ steps[active]?.title }}
-      </h1>
-    </div>
-    <div class="ml-4 flex shrink-0 gap-2 items-center">
-      <span v-if="selectedTemplateName" class="text-[12px] text-gray-500 font-bold max-w-32 truncate">
-        {{ selectedTemplateName }}
-      </span>
-      <AppTag v-if="selectedTemplateName" type="primary-light">
-        已选模板
-      </AppTag>
-      <div class="text-[10px] font-bold ml-1 flex gap-0.5 items-baseline">
-        <span class="text-primary">{{ active + 1 }}</span>
-        <span class="text-gray-200">/</span>
-        <span class="text-gray-300 font-extrabold">{{ steps.length }}</span>
-      </div>
-    </div>
-
-    <!-- Thin Integrated Progress Bar at edges -->
-    <div class="bg-primary/5 h-0.8 bottom-0 left-0 right-0 absolute overflow-hidden">
+  <header class="px-6 bg-primary flex h-16 w-full shadow-md items-center top-0 justify-between sticky z-50">
+    <h1 class="text-[20px] text-white tracking-wide font-bold">
+      {{ steps[active]?.title || '选择模板' }}
+    </h1>
+    <div class="flex gap-3 items-center">
+      <!-- Selected Template Label Pill -->
       <div
-        class="bg-primary h-full transition-all duration-600 ease-out"
-        :style="{ width: `${((active + 1) / steps.length) * 100}%` }"
-      />
+        v-if="selectedTemplateName && active === 0"
+        class="px-3 py-1 rounded-full bg-white/25 flex shadow-sm items-center backdrop-blur-sm"
+      >
+        <span class="text-xs text-white font-semibold max-w-28 truncate">
+          {{ selectedTemplateName }}
+        </span>
+      </div>
+      <!-- Step Indicator Pill -->
+      <div class="px-3.5 py-1 rounded-full bg-white/25 flex shadow-sm items-center backdrop-blur-sm">
+        <span class="text-sm text-white font-bold">
+          {{ active + 1 }}<span class="font-medium opacity-60">/{{ steps.length }}</span>
+        </span>
+      </div>
     </div>
   </header>
 </template>
