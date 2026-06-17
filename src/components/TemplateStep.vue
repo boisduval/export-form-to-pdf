@@ -16,55 +16,38 @@ function select(id: number) {
   emit('update:modelValue', id)
 }
 
-// Design configuration mimicking the reference image
 const configs = [
   {
-    gradient: 'linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%)',
-    titleColor: '#EA580C', // Orange/gold title text
-    subtitle: '避免高额费用',
-    activeColor: '#EA580C',
-  },
-  {
-    gradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
-    titleColor: '#EA580C',
-    subtitle: '详细计算',
-    activeColor: '#4F46E5',
-  },
-  {
-    gradient: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
-    titleColor: '#EA580C',
-    subtitle: '智能好用',
-    activeColor: '#0ea5e9',
-  },
-  {
     gradient: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)',
-    titleColor: '#EA580C',
-    subtitle: '万能计算公式',
     activeColor: '#E11D48',
   },
   {
+    gradient: 'linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%)',
+    activeColor: '#EA580C',
+  },
+  {
+    gradient: 'linear-gradient(135deg, #F7FEE7 0%, #ECFCCB 100%)',
+    activeColor: '#65A30D',
+  },
+  {
     gradient: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
-    titleColor: '#EA580C',
-    subtitle: '绿色通道',
     activeColor: '#16A34A',
   },
   {
     gradient: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
-    titleColor: '#EA580C',
-    subtitle: '专属设计',
     activeColor: '#0D9488',
   },
   {
-    gradient: 'linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%)',
-    titleColor: '#EA580C',
-    subtitle: '快捷核对',
-    activeColor: '#9333EA',
+    gradient: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
+    activeColor: '#0ea5e9',
   },
   {
-    gradient: 'linear-gradient(135deg, #F7FEE7 0%, #ECFCCB 100%)',
-    titleColor: '#EA580C',
-    subtitle: '标准计算',
-    activeColor: '#65A30D',
+    gradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
+    activeColor: '#4F46E5',
+  },
+  {
+    gradient: 'linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%)',
+    activeColor: '#9333EA',
   },
 ]
 </script>
