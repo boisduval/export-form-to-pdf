@@ -28,7 +28,7 @@ const emit = defineEmits<{
 
       <div>
         <button
-          class="text-xs text-white font-bold px-4 py-2.5 rounded-xl border-none flex gap-1.5 w-full cursor-pointer shadow-blue-500/15 shadow-md transition-all duration-200 items-center justify-center from-blue-500 to-indigo-600 bg-gradient-to-r active:scale-95 hover:from-blue-600 hover:to-indigo-700"
+          class="text-xs text-white font-bold px-4 py-2.5 rounded-xl border-none flex gap-1.5 w-full cursor-pointer shadow-blue-500/15 shadow-md transition-all duration-200 items-center justify-center from-blue-500 to-indigo-600 bg-gradient-to-r active:scale-95"
           @click="emit('toggle3d')"
         >
           <div class="i-carbon-cube text-sm" />

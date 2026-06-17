@@ -92,7 +92,7 @@ defineExpose({
         class="px-1.5 py-3 rounded-xl flex flex-1 flex-col gap-1.5 cursor-pointer transition-all duration-300 items-center justify-center relative overflow-hidden active:scale-95"
         :class="shapeType === item.type
           ? 'bg-white shadow-md shadow-slate-200/80 text-[#3B66F5] font-bold scale-[1.02] border border-slate-200/30'
-          : 'text-slate-500 hover:text-slate-700 bg-transparent hover:bg-white/40 border border-transparent'"
+          : 'text-slate-500 bg-transparent border border-transparent'"
         @click="shapeType = item.type as 'rect' | 'trap' | 'poly'"
       >
         <!-- Custom SVGs for shape visualization -->

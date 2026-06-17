@@ -693,7 +693,7 @@ defineExpose({
           </button>
           <button
             v-if="!shape.isClosed"
-            class="text-xs text-emerald-600 font-bold px-3 py-2.5 border border-emerald-200/50 rounded-2xl bg-emerald-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 hover:bg-emerald-100/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
+            class="text-xs text-emerald-600 font-bold px-3 py-2.5 border border-emerald-200/50 rounded-2xl bg-emerald-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
             :disabled="shape.points.length < 3"
             @click="closeShape"
           >
@@ -701,7 +701,7 @@ defineExpose({
             闭合
           </button>
           <button
-            class="text-xs text-blue-600 font-bold px-3 py-2.5 border border-blue-200/50 rounded-2xl bg-blue-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 hover:bg-blue-100/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
+            class="text-xs text-blue-600 font-bold px-3 py-2.5 border border-blue-200/50 rounded-2xl bg-blue-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
             :disabled="shape.points.length === 0"
             @click="undo"
           >
@@ -709,7 +709,7 @@ defineExpose({
             撤销
           </button>
           <button
-            class="text-xs text-rose-600 font-bold px-3 py-2.5 border border-rose-200/50 rounded-2xl bg-rose-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 hover:bg-rose-100/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
+            class="text-xs text-rose-600 font-bold px-3 py-2.5 border border-rose-200/50 rounded-2xl bg-rose-50/70 flex flex-1 gap-1 cursor-pointer whitespace-nowrap shadow-sm transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/30 disabled:bg-slate-50/50 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-95 disabled:scale-100"
             :disabled="shape.points.length === 0"
             @click="clear"
           >
