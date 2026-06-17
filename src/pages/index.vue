@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { saveAs } from 'file-saver'
 import { showFailToast, showLoadingToast, showSuccessToast, showToast } from 'vant'
-import { generateDocx } from '@/utils/docxExport'
+import { generateImage } from '@/utils/imageExport'
 
 const active = ref(0)
 const selectedTemplate = ref(1)
@@ -51,7 +51,7 @@ async function onSubmit() {
   }
 
   const loading = showLoadingToast({
-    message: '正在生成文档...',
+    message: '正在生成图片...',
     forbidClick: true,
     duration: 0,
   })
@@ -60,14 +60,14 @@ async function onSubmit() {
     const formData = formStepRef.value.formData
     const imageData = drawingData.value?.image
 
-    // 调用简化后的导出函数
-    const blob = await generateDocx(
+    // 动态生成包含文本和图纸的平面核查图片
+    const blob = await generateImage(
       formData,
       imageData,
-      `/${selectedTemplateValue.value}.docx`,
+      selectedTemplateValue.value,
     )
 
-    const fileName = `${formData.applicant_name || '未命名'}_核查报告.docx`
+    const fileName = `${formData.applicant_name || '未命名'}_核查报告.png`
     saveAs(blob, fileName)
 
     loading.close()

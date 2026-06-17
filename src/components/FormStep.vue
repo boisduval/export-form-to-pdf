@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
+import { templatesPreset } from '@/utils/templatesPreset'
+import type { FormField } from '@/utils/templatesPreset'
 
 interface DrawingData {
-  type: 'rect' | 'trap'
+  type: 'rect' | 'trap' | 'poly'
   data: any
   image?: string
   calculatedArea?: string
@@ -13,14 +15,13 @@ const props = defineProps<{
   drawingData?: DrawingData
 }>()
 
-const formData = reactive({
+const formData = reactive<Record<string, any>>({
   projectName: '',
   applyNo: '',
   date: '',
   manager: '',
   remark: '',
 
-  // Specific for 'change' and 'normal'
   applicant_name: '',
   business_area: '',
   street_address: '',
@@ -30,9 +31,31 @@ const formData = reactive({
   waiting_count: '',
 })
 
-// 自动填充矩形面积
+// 默认表单字段（当未选中特定核查模版时使用）
+const defaultFields: FormField[] = [
+  { key: 'projectName', label: '项目名称', placeholder: '请输入名称', type: 'text' },
+  { key: 'applyNo', label: '申请编号', placeholder: '请输入编号', type: 'text' },
+  { key: 'date', label: '申请日期', placeholder: '请选择', type: 'text' },
+  { key: 'manager', label: '负责人', placeholder: '姓名', type: 'text' },
+  { key: 'remark', label: '备注', placeholder: '如有说明请填写', type: 'textarea' },
+]
+
+// 动态获取当前选中的模板字段配置
+const fields = computed(() => {
+  if (!props.templateValue || !templatesPreset[props.templateValue]) {
+    return defaultFields
+  }
+  return templatesPreset[props.templateValue].fields
+})
+
+// 是否为有效的核查模板模式
+const isCheckTemplate = computed(() => {
+  return !!(props.templateValue && templatesPreset[props.templateValue])
+})
+
+// 自动填充矩形/多边形面积
 watch(() => props.drawingData, (newVal) => {
-  if (['change', 'normal', 'large', 'queue'].includes(props.templateValue || '') && newVal?.type === 'rect' && newVal.calculatedArea) {
+  if (isCheckTemplate.value && newVal?.calculatedArea) {
     formData.business_area = newVal.calculatedArea
   }
 }, { immediate: true })
@@ -45,101 +68,41 @@ defineExpose({
 <template>
   <div class="mt-2 flex flex-col">
     <div class="border border-gray-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
-      <van-cell-group v-if="templateValue === 'normal' || templateValue === 'queue'" :border="false">
-        <van-field v-model="formData.applicant_name" label="申请人" placeholder="请输入姓名" />
-        <van-field v-model="formData.business_area" label="经营面积" placeholder="请输入面积" type="number">
-          <template #right-icon>
-            ㎡
-          </template>
-        </van-field>
-        <van-field v-model="formData.street_address" label="实际地址" placeholder="请输入完整地址" />
-        <van-field v-model="formData.layout_capacity" label="布局容量" placeholder="请输入容量" type="number" />
-        <van-field v-model="formData.existing_shops" label="已设置零售店" placeholder="请输入数量" type="number" />
-        <van-field v-model="formData.license_count" label="办证数" placeholder="不受合理容量限制办证数" type="number" />
-        <van-field v-model="formData.waiting_count" label="轮候人数" placeholder="请输入轮候人数" type="number" />
-        
-        <van-cell title="平面图预览">
-          <template #label>
-            <div class="mt-2 p-2 border rounded-lg bg-white flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden">
-              <img
-                v-if="drawingData?.image"
-                :src="drawingData.image"
-                alt="平面图"
-              >
-              <div v-else class="text-gray-400 py-10 flex flex-col gap-1 items-center">
-                <div class="i-carbon-image h-6 w-6" />
-                <span class="text-xs">未获取到平面图数据</span>
-              </div>
-            </div>
-          </template>
-        </van-cell>
-      </van-cell-group>
-
-      <van-cell-group v-else-if="templateValue === 'large'" :border="false">
-        <van-field v-model="formData.applicant_name" label="申请人" placeholder="请输入姓名" />
-        <van-field v-model="formData.business_area" label="经营面积" placeholder="请输入面积" type="number">
-          <template #right-icon>
-            ㎡
-          </template>
-        </van-field>
-        <van-field v-model="formData.street_address" label="实际地址" placeholder="请输入完整地址" />
-        <van-field v-model="formData.layout_capacity" label="布局容量" placeholder="请输入容量" type="number" />
-        <van-field v-model="formData.existing_shops" label="已设置零售店" placeholder="请输入数量" type="number" />
-        
-        <van-cell title="平面图预览">
-          <template #label>
-            <div class="mt-2 p-2 border rounded-lg bg-white flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden">
-              <img
-                v-if="drawingData?.image"
-                :src="drawingData.image"
-                alt="平面图"
-              >
-              <div v-else class="text-gray-400 py-10 flex flex-col gap-1 items-center">
-                <div class="i-carbon-image h-6 w-6" />
-                <span class="text-xs">未获取到平面图数据</span>
-              </div>
-            </div>
-          </template>
-        </van-cell>
-      </van-cell-group>
-
-      <van-cell-group v-else-if="templateValue === 'change'" :border="false">
-        <van-field v-model="formData.applicant_name" label="申请人" placeholder="请输入姓名" />
-        <van-field v-model="formData.business_area" label="经营面积" placeholder="请输入面积" type="number">
-          <template #right-icon>
-            ㎡
-          </template>
-        </van-field>
-        <van-cell title="平面图预览">
-          <template #label>
-            <div class="mt-2 p-2 border rounded-lg bg-white flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden">
-              <img
-                v-if="drawingData?.image"
-                :src="drawingData.image"
-                alt="平面图"
-              >
-              <div v-else class="text-gray-400 py-10 flex flex-col gap-1 items-center">
-                <div class="i-carbon-image h-6 w-6" />
-                <span class="text-xs">未获取到平面图数据</span>
-              </div>
-            </div>
-          </template>
-        </van-cell>
-      </van-cell-group>
-
-      <van-cell-group v-else :border="false">
-        <van-field v-model="formData.projectName" label="项目名称" placeholder="请输入名称" />
-        <van-field v-model="formData.applyNo" label="申请编号" placeholder="请输入编号" />
-        <van-field v-model="formData.date" is-link label="申请日期" placeholder="请选择" readonly />
-        <van-field v-model="formData.manager" label="负责人" placeholder="姓名" />
+      <van-cell-group :border="false">
+        <!-- 动态循环渲染配置的表单项 -->
         <van-field
-          v-model="formData.remark"
-          autosize
-          label="备注"
-          placeholder="如有说明请填写"
-          rows="2"
-          type="textarea"
-        />
+          v-for="field in fields"
+          :key="field.key"
+          v-model="formData[field.key]"
+          :label="field.label"
+          :placeholder="field.placeholder"
+          :type="field.type === 'textarea' ? 'textarea' : (field.type === 'number' ? 'number' : 'text')"
+          :rows="field.type === 'textarea' ? 2 : undefined"
+          :autosize="field.type === 'textarea' ? true : undefined"
+          :readonly="field.key === 'date'"
+          :is-link="field.key === 'date'"
+        >
+          <template v-if="field.suffix" #right-icon>
+            {{ field.suffix }}
+          </template>
+        </van-field>
+
+        <!-- 平面图预览（仅在选择核查模版时显示） -->
+        <van-cell v-if="isCheckTemplate" title="平面图预览">
+          <template #label>
+            <div class="mt-2 p-2 border rounded-lg bg-white flex flex-col min-h-32 shadow-inner items-center justify-center overflow-hidden">
+              <img
+                v-if="drawingData?.image"
+                :src="drawingData.image"
+                alt="平面图"
+              >
+              <div v-else class="text-gray-400 py-10 flex flex-col gap-1 items-center">
+                <div class="i-carbon-image h-6 w-6" />
+                <span class="text-xs">未获取到平面图数据</span>
+              </div>
+            </div>
+          </template>
+        </van-cell>
       </van-cell-group>
     </div>
   </div>
