@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { Circle, IText, Line, Point, Polygon, Polyline } from 'fabric'
 import BaseShapeCanvas from './BaseShapeCanvas.vue'
+import ThreeDPreview from './ThreeDPreview.vue'
 import { useShapeCanvas } from '@/composables/useShapeCanvas'
 
 const props = defineProps<{
@@ -14,9 +15,7 @@ const shape = ref(props.modelValue || { points: [] as { x: number, y: number }[]
 const {
   canvasEl,
   canvas,
-  activeObject,
   initCanvas,
-  deleteSelected,
   addCabinet,
   addDoor,
 } = useShapeCanvas()
@@ -118,7 +117,7 @@ function rebuildShape(snappedPoint: any = null, skipViewportUpdate = false) {
     return
 
   // 0. 检查并校正画布尺寸 (解决 v-show 初始化问题)
-  const container = canvasEl.value?.parentElement
+  const container = canvasEl.value?.closest('.canvas-wrapper')
   if (container && container.clientWidth > 0 && container.clientHeight > 0) {
     if (canvas.value.getWidth() !== container.clientWidth || canvas.value.getHeight() !== container.clientHeight) {
       canvas.value.setDimensions({
@@ -563,12 +562,46 @@ function closeShape() {
   if (shape.value.points.length >= 3) {
     shape.value.isClosed = true
     rebuildShape()
+    if (canvas.value) {
+      addCabinet(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2)
+      addDoor(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2 + 80)
+    }
   }
 }
 
 onMounted(() => {
   setTimeout(initPolyCanvas, 50)
 })
+
+const show3D = ref(false)
+
+function getPreviewData() {
+  if (!canvas.value)
+    return null
+
+  const cw = canvas.value.getWidth()
+  const ch = canvas.value.getHeight()
+
+  const objects = canvas.value.getObjects().filter((o: any) => o.associatedLabel)
+  const subObjects = objects.map((o: any) => ({
+    type: o.associatedLabel.text,
+    left: o.left,
+    top: o.top,
+    width: o.width * o.scaleX,
+    height: o.height * o.scaleY,
+    angle: o.angle,
+  }))
+
+  return {
+    type: 'poly',
+    canvasWidth: cw,
+    canvasHeight: ch,
+    data: {
+      points: shape.value.points,
+    },
+    subObjects,
+  }
+}
 
 defineExpose({
   shape,
@@ -598,12 +631,8 @@ defineExpose({
 
     <BaseShapeCanvas
       :read-only="readOnly"
-      :active-object="activeObject"
       height-class="h-80"
-      :show-add-cabinet="shape.isClosed"
-      @add-door="addDoor(150, 150)"
-      @delete-selected="deleteSelected"
-      @add-cabinet="addCabinet(100, 100)"
+      @toggle3d="show3D = true"
     >
       <template #canvas>
         <canvas ref="canvasEl" />
@@ -613,22 +642,40 @@ defineExpose({
         <!-- Polygon Actions -->
         <div class="flex gap-2">
           <button
-            class="text-xs font-bold px-3 py-1.5 rounded-xl flex flex-1 gap-1 shadow-sm transition-all items-center justify-center active:scale-95"
-            :class="isSnapEnabled ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-400 border border-slate-200'"
+            class="text-xs font-bold px-3 py-2 rounded-xl flex flex-1 gap-1.5 cursor-pointer shadow-xs transition-all duration-200 items-center justify-center active:scale-95"
+            :class="isSnapEnabled
+              ? 'bg-amber-50 text-amber-600 border border-amber-200/60'
+              : 'bg-slate-50 text-slate-500 border border-slate-200/50'"
             @click="isSnapEnabled = !isSnapEnabled"
           >
-            <span class="rounded-full h-1.5 w-1.5" :class="isSnapEnabled ? 'bg-amber-500' : 'bg-slate-300'" />
+            <span class="rounded-full h-2 w-2" :class="isSnapEnabled ? 'bg-amber-500 shadow-sm shadow-amber-500/50 animate-pulse' : 'bg-slate-300'" />
             吸附: {{ isSnapEnabled ? '开' : '关' }}
           </button>
-          <van-button v-if="!shape.isClosed" size="small" type="primary" plain class="flex-1 !rounded-xl" :disabled="shape.points.length < 3" @click="closeShape">
+          <button
+            v-if="!shape.isClosed"
+            class="text-xs text-emerald-600 font-bold px-3 py-2 border border-emerald-200 rounded-xl bg-emerald-50/70 flex flex-1 gap-1 cursor-pointer shadow-xs transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/50 disabled:bg-slate-50 hover:bg-emerald-100/80 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 disabled:scale-100"
+            :disabled="shape.points.length < 3"
+            @click="closeShape"
+          >
+            <div class="i-carbon-checkmark text-sm" />
             闭合
-          </van-button>
-          <van-button size="small" plain class="flex-1 !rounded-xl" :disabled="shape.points.length === 0" @click="undo">
+          </button>
+          <button
+            class="text-xs text-blue-600 font-bold px-3 py-2 border border-blue-200 rounded-xl bg-blue-50/70 flex flex-1 gap-1 cursor-pointer shadow-xs transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/50 disabled:bg-slate-50 hover:bg-blue-100/80 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 disabled:scale-100"
+            :disabled="shape.points.length === 0"
+            @click="undo"
+          >
+            <div class="i-carbon-undo text-sm" />
             撤销
-          </van-button>
-          <van-button size="small" plain class="flex-1 !rounded-xl" :disabled="shape.points.length === 0" @click="clear">
+          </button>
+          <button
+            class="text-xs text-rose-600 font-bold px-3 py-2 border border-rose-200 rounded-xl bg-rose-50/70 flex flex-1 gap-1 cursor-pointer shadow-xs transition-all duration-200 items-center justify-center disabled:text-slate-400 disabled:border-slate-200/50 disabled:bg-slate-50 hover:bg-rose-100/80 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 disabled:scale-100"
+            :disabled="shape.points.length === 0"
+            @click="clear"
+          >
+            <div class="i-carbon-reset text-sm" />
             清空
-          </van-button>
+          </button>
         </div>
       </template>
 
@@ -638,6 +685,9 @@ defineExpose({
           <van-field v-model="newLength" type="number" label="长度(m)" placeholder="请输入新长度" input-align="right" step="0.1" autofocus />
         </div>
       </van-dialog>
+
+      <!-- 3D Preview Modal -->
+      <ThreeDPreview v-model:show="show3D" :data="getPreviewData()" />
     </BaseShapeCanvas>
   </div>
 </template>

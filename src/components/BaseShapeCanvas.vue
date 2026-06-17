@@ -1,15 +1,11 @@
 <script setup lang="ts">
 defineProps<{
   readOnly?: boolean
-  activeObject?: any
   heightClass?: string
-  showAddCabinet?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'addDoor'): void
-  (e: 'deleteSelected'): void
-  (e: 'addCabinet'): void
+  (e: 'toggle3d'): void
 }>()
 </script>
 
@@ -30,35 +26,15 @@ const emit = defineEmits<{
       <!-- Slot for toolbar controls (like snap switcher, close/undo/clear buttons) -->
       <slot name="toolbar" />
 
-      <div class="gap-3 grid grid-cols-2">
-        <van-button icon="plus" plain size="small" type="primary" block class="shadow-sm !rounded-xl" @click="emit('addDoor')">
-          添加大门
-        </van-button>
-        <van-button
-          v-if="activeObject && activeObject.associatedLabel?.text !== '烟柜'"
-          icon="delete"
-          plain
-          size="small"
-          type="danger"
-          block
-          class="shadow-sm !rounded-xl"
-          @click="emit('deleteSelected')"
+      <div>
+        <button
+          class="text-xs text-white font-bold px-4 py-2.5 rounded-xl border-none flex gap-1.5 w-full cursor-pointer shadow-blue-500/15 shadow-md transition-all duration-200 items-center justify-center from-blue-500 to-indigo-600 bg-gradient-to-r active:scale-95 hover:from-blue-600 hover:to-indigo-700"
+          @click="emit('toggle3d')"
         >
-          删除选中
-        </van-button>
+          <div class="i-carbon-cube text-sm" />
+          3D 预览
+        </button>
       </div>
-
-      <van-button
-        v-if="showAddCabinet"
-        icon="shop-o"
-        size="small"
-        type="primary"
-        block
-        class="shadow-sm !rounded-xl"
-        @click="emit('addCabinet')"
-      >
-        添加烟柜
-      </van-button>
     </div>
 
     <!-- Custom content slot (like forms/inputs) -->

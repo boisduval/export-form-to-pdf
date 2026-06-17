@@ -18,7 +18,19 @@ watch(shapeType, () => {
   })
 })
 
+function triggerResize() {
+  nextTick(() => {
+    if (shapeType.value === 'rect')
+      rectRef.value?.drawRoom?.()
+    else if (shapeType.value === 'trap')
+      trapRef.value?.drawRoom?.()
+    else if (shapeType.value === 'poly')
+      polyRef.value?.rebuildShape?.()
+  })
+}
+
 defineExpose({
+  triggerResize,
   getShapeData: () => {
     const isRect = shapeType.value === 'rect'
     const isTrap = shapeType.value === 'trap'
@@ -69,7 +81,7 @@ defineExpose({
 <template>
   <div class="mt-2 flex flex-col gap-5">
     <!-- Type Selector -->
-    <div class="p-1.5 border border-slate-200/40 rounded-2xl bg-slate-100/60 flex gap-1.5 shadow-inner backdrop-blur-md">
+    <div class="p-1.5 border border-slate-200/20 rounded-2xl bg-slate-100/50 flex gap-1.5 shadow-inner backdrop-blur-md">
       <button
         v-for="item in [
           { type: 'rect', label: '矩形房间', desc: '标准方形', icon: 'rect' },
@@ -77,10 +89,10 @@ defineExpose({
           { type: 'poly', label: '自由绘制', desc: '多边形', icon: 'poly' },
         ]"
         :key="item.type"
-        class="px-1.5 py-3 rounded-xl flex flex-1 flex-col gap-1.5 transition-all duration-300 items-center justify-center relative overflow-hidden active:scale-98"
+        class="px-1.5 py-3 rounded-xl flex flex-1 flex-col gap-1.5 cursor-pointer transition-all duration-300 items-center justify-center relative overflow-hidden active:scale-95"
         :class="shapeType === item.type
-          ? 'bg-white shadow-md text-primary font-bold scale-[1.02] border border-slate-200/50'
-          : 'text-slate-500 hover:text-slate-700 bg-transparent hover:bg-white/30 border border-transparent'"
+          ? 'bg-white shadow-md shadow-slate-200/80 text-[#3B66F5] font-bold scale-[1.02] border border-slate-200/30'
+          : 'text-slate-500 hover:text-slate-700 bg-transparent hover:bg-white/40 border border-transparent'"
         @click="shapeType = item.type as 'rect' | 'trap' | 'poly'"
       >
         <!-- Custom SVGs for shape visualization -->
@@ -94,7 +106,7 @@ defineExpose({
           stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
-          :class="shapeType === item.type ? 'text-primary scale-110' : 'text-slate-400'"
+          :class="shapeType === item.type ? 'text-[#3B66F5] scale-110' : 'text-slate-400'"
           class="transition-all duration-300"
         >
           <!-- Rect Icon -->
@@ -111,10 +123,10 @@ defineExpose({
         <span class="text-xs tracking-wide font-semibold">{{ item.label }}</span>
         <span class="text-[9px] tracking-tight font-normal opacity-75">{{ item.desc }}</span>
 
-        <!-- Active indicator dot -->
+        <!-- Active indicator capsule -->
         <span
           v-if="shapeType === item.type"
-          class="rounded-full bg-primary h-1.5 w-1.5 bottom-1 absolute animate-pulse"
+          class="rounded-full bg-[#3B66F5] h-1 w-3.5 transition-all duration-300 bottom-1 absolute"
         />
       </button>
     </div>

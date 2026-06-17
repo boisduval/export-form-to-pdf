@@ -17,7 +17,7 @@ export function useShapeCanvas() {
   function initCanvas(options: { width?: number, height?: number } = {}) {
     if (!canvasEl.value)
       return
-    const container = canvasEl.value.parentElement
+    const container = canvasEl.value.closest('.canvas-wrapper')
 
     canvas.value = new Canvas(canvasEl.value, {
       backgroundColor: 'transparent',
@@ -43,7 +43,7 @@ export function useShapeCanvas() {
   function resizeCanvas() {
     if (!canvas.value || !canvasEl.value)
       return false
-    const container = canvasEl.value.parentElement
+    const container = canvasEl.value.closest('.canvas-wrapper')
     if (container && container.clientWidth > 0 && container.clientHeight > 0) {
       if (canvas.value.getWidth() !== container.clientWidth || canvas.value.getHeight() !== container.clientHeight) {
         canvas.value.setDimensions({

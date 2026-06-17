@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { IText, Polygon } from 'fabric'
 import BaseShapeCanvas from './BaseShapeCanvas.vue'
+import ThreeDPreview from './ThreeDPreview.vue'
 import { useShapeCanvas } from '@/composables/useShapeCanvas'
 
 const props = defineProps<{
@@ -14,9 +15,7 @@ const trap = ref(props.modelValue || { top: 30, bottom: 50, h: 30, offset: 10 })
 const {
   canvasEl,
   canvas,
-  activeObject,
   initCanvas,
-  deleteSelected,
   addCabinet,
   addDoor,
 } = useShapeCanvas()
@@ -37,7 +36,7 @@ function drawRoom() {
   roomGroup = []
 
   // 2. 检查并校正画布尺寸
-  const container = canvasEl.value?.parentElement
+  const container = canvasEl.value?.closest('.canvas-wrapper')
   if (container && container.clientWidth > 0 && container.clientHeight > 0) {
     if (canvas.value.getWidth() !== container.clientWidth || canvas.value.getHeight() !== container.clientHeight) {
       canvas.value.setDimensions({
@@ -139,7 +138,10 @@ function drawRoom() {
 function initTrapCanvas() {
   initCanvas()
   drawRoom()
-  addCabinet()
+  if (canvas.value) {
+    addCabinet(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2)
+    addDoor(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2 + 80)
+  }
 }
 
 onMounted(() => {
@@ -149,6 +151,60 @@ onMounted(() => {
 })
 
 watch(trap, drawRoom, { deep: true })
+
+const show3D = ref(false)
+
+function getPreviewData() {
+  if (!canvas.value)
+    return null
+
+  const cw = canvas.value.getWidth()
+  const ch = canvas.value.getHeight()
+  const padding = 40
+  const tt = Number(trap.value.top) || 1
+  const tb = Number(trap.value.bottom) || 1
+  const th = Number(trap.value.h) || 1
+  const to = Number(trap.value.offset) || 0
+
+  const minX = Math.min(0, to)
+  const maxX = Math.max(tb, to + tt)
+  const actualW = maxX - minX
+  const scale = Math.min((cw - padding * 2) / actualW, (ch - padding * 2) / th)
+
+  const sw_top = tt * scale
+  const sw_bottom = tb * scale
+  const sh = th * scale
+  const soff = to * scale
+  const sw_max = actualW * scale
+
+  const points = [
+    { x: soff - sw_max / 2, y: -sh / 2 },
+    { x: soff + sw_top - sw_max / 2, y: -sh / 2 },
+    { x: sw_bottom - sw_max / 2, y: sh / 2 },
+    { x: -sw_max / 2, y: sh / 2 },
+  ]
+
+  const objects = canvas.value.getObjects().filter(o => (o as any).associatedLabel)
+  const subObjects = objects.map(o => ({
+    type: (o as any).associatedLabel.text,
+    left: o.left,
+    top: o.top,
+    width: (o as any).width * (o as any).scaleX,
+    height: (o as any).height * (o as any).scaleY,
+    angle: o.angle,
+  }))
+
+  return {
+    type: 'trap',
+    canvasWidth: cw,
+    canvasHeight: ch,
+    data: {
+      ...trap.value,
+      roomPoints: points,
+    },
+    subObjects,
+  }
+}
 
 defineExpose({
   trap,
@@ -168,9 +224,7 @@ defineExpose({
 <template>
   <BaseShapeCanvas
     :read-only="readOnly"
-    :active-object="activeObject"
-    @add-door="addDoor"
-    @delete-selected="deleteSelected"
+    @toggle3d="show3D = true"
   >
     <template #canvas>
       <canvas ref="canvasEl" />
@@ -210,5 +264,8 @@ defineExpose({
         </van-cell-group>
       </div>
     </template>
+
+    <!-- 3D Preview Modal -->
+    <ThreeDPreview v-model:show="show3D" :data="getPreviewData()" />
   </BaseShapeCanvas>
 </template>

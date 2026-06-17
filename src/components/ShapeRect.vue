@@ -15,9 +15,7 @@ const rect = ref(props.modelValue || { w: 40, h: 30 })
 const {
   canvasEl,
   canvas,
-  activeObject,
   initCanvas,
-  deleteSelected,
   addCabinet,
   addDoor,
 } = useShapeCanvas()
@@ -38,7 +36,7 @@ function drawRoom() {
   roomGroup = []
 
   // 2. 检查并校正画布尺寸 (解决 v-show 初始化问题)
-  const container = canvasEl.value?.parentElement
+  const container = canvasEl.value?.closest('.canvas-wrapper')
   if (container && container.clientWidth > 0 && container.clientHeight > 0) {
     if (canvas.value.getWidth() !== container.clientWidth || canvas.value.getHeight() !== container.clientHeight) {
       canvas.value.setDimensions({
@@ -111,7 +109,10 @@ function drawRoom() {
 function initRectCanvas() {
   initCanvas()
   drawRoom()
-  addCabinet()
+  if (canvas.value) {
+    addCabinet(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2)
+    addDoor(canvas.value.getWidth() / 2, canvas.value.getHeight() / 2 + 80)
+  }
 }
 
 const show3D = ref(false)
@@ -178,27 +179,10 @@ defineExpose({
 <template>
   <BaseShapeCanvas
     :read-only="readOnly"
-    :active-object="activeObject"
-    @add-door="addDoor"
-    @delete-selected="deleteSelected"
+    @toggle3d="show3D = true"
   >
     <template #canvas>
       <canvas ref="canvasEl" />
-    </template>
-
-    <template #overlay>
-      <!-- 3D Toggle Overlay -->
-      <div v-if="!readOnly" class="rounded-full shadow-sm right-3 top-3 absolute z-10 overflow-hidden">
-        <van-button
-          size="mini"
-          icon="apps-o"
-          type="primary"
-          class="!px-3 !h-7"
-          @click="show3D = true"
-        >
-          3D 预览
-        </van-button>
-      </div>
     </template>
 
     <template #inputs>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { saveAs } from 'file-saver'
 import { showFailToast, showLoadingToast, showSuccessToast, showToast } from 'vant'
 import { generateImage } from '@/utils/imageExport'
@@ -7,6 +7,14 @@ import { generateImage } from '@/utils/imageExport'
 const active = ref(0)
 const selectedTemplate = ref(1)
 const drawingRef = ref()
+
+watch(active, (newVal) => {
+  if (newVal === 1) {
+    nextTick(() => {
+      drawingRef.value?.triggerResize?.()
+    })
+  }
+})
 const drawingData = ref()
 const formStepRef = ref()
 
