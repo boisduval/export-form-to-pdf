@@ -15,41 +15,45 @@ const emit = defineEmits<{
   <nav class="pb-safe px-8 border-t border-gray-100 bg-white/95 flex h-24 w-full shadow-[0_-4px_20px_rgba(0,0,0,0.03)] items-center bottom-0 left-0 justify-between fixed z-50 backdrop-blur-md">
     <!-- Previous Button -->
     <div
-      class="flex flex-col transition-all duration-150 items-center justify-center"
-      :class="active > 0 ? 'text-gray-700 cursor-pointer active:scale-95' : 'text-gray-300 cursor-not-allowed opacity-40'"
+      class="flex flex-col cursor-pointer transition-all duration-200 items-center justify-center"
+      :class="active > 0 ? 'text-slate-700 hover:text-[#3B66F5] active:scale-90' : 'text-slate-300 cursor-not-allowed opacity-40 pointer-events-none'"
       @click="active > 0 && emit('prev')"
     >
-      <div class="i-carbon-chevron-left text-2xl" />
-      <span class="text-[11px] font-bold mt-1">上一步</span>
+      <div class="i-carbon-chevron-left text-2xl transition-transform duration-200" />
+      <span class="text-[10px] tracking-wider font-bold mt-0.5">上一步</span>
     </div>
 
     <!-- Next Button -->
     <button
       v-if="active < (maxSteps || 2)"
-      class="text-white font-bold px-10 py-3.5 rounded-full bg-primary flex gap-3 shadow-primary/30 shadow-xl transition-all duration-150 items-center active:scale-95"
+      class="text-white font-bold px-10 py-3 rounded-full border-none flex gap-2.5 cursor-pointer shadow-blue-500/20 shadow-lg transition-all duration-200 items-center from-blue-500 to-indigo-600 bg-gradient-to-r hover:shadow-blue-500/25 hover:shadow-xl active:scale-95 hover:from-blue-600 hover:to-indigo-700"
       @click="emit('next')"
     >
-      <span class="text-sm font-bold">下一步</span>
-      <div class="rounded-full bg-white/20 flex h-6 w-6 items-center justify-center">
-        <div class="i-carbon-chevron-right text-xs text-white" />
+      <span class="text-xs tracking-wider">下一步</span>
+      <div class="rounded-full bg-white/20 flex h-5.5 w-5.5 items-center justify-center">
+        <div class="i-carbon-chevron-right text-[10px] text-white" />
       </div>
     </button>
 
-    <!-- Submit Button -->
-    <div
-      v-if="active === (maxSteps || 2)"
-      class="text-primary flex flex-col cursor-pointer transition-all duration-150 items-center justify-center active:scale-95"
+    <!-- Submit Button (Active) -->
+    <button
+      v-else-if="active === (maxSteps || 2)"
+      class="text-white font-bold px-8 py-3 rounded-full border-none flex gap-2 cursor-pointer shadow-emerald-500/20 shadow-lg transition-all duration-200 items-center from-emerald-500 to-teal-600 bg-gradient-to-r hover:shadow-emerald-500/25 hover:shadow-xl active:scale-95 hover:from-emerald-600 hover:to-teal-700"
       @click="emit('submit')"
     >
-      <div class="i-carbon-checkmark-filled text-2xl" />
-      <span class="text-[11px] font-bold mt-1">立即提交</span>
-    </div>
+      <span class="text-xs tracking-wider">立即提交</span>
+      <div class="rounded-full bg-white/20 flex h-5.5 w-5.5 items-center justify-center">
+        <div class="i-carbon-checkmark text-[10px] text-white font-bold" />
+      </div>
+    </button>
+
+    <!-- Submit Button (Placeholder/Disabled) -->
     <div
       v-else
-      class="text-gray-300 opacity-40 flex flex-col items-center justify-center"
+      class="text-slate-300 opacity-40 flex flex-col select-none items-center justify-center"
     >
       <div class="i-carbon-checkmark text-2xl" />
-      <span class="text-[11px] font-bold mt-1">立即提交</span>
+      <span class="text-[10px] tracking-wider font-bold mt-0.5">立即提交</span>
     </div>
   </nav>
 </template>
