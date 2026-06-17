@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, shallowRef } from 'vue'
-import { Canvas, Circle, IText, Line, Point, Polygon, Polyline, Rect } from 'fabric'
-import type { FabricObject } from 'fabric'
-
-interface CanvasObject extends FabricObject {
-  associatedLabel?: IText
-}
+import { onMounted, ref } from 'vue'
+import { Circle, IText, Line, Point, Polygon, Polyline } from 'fabric'
+import BaseShapeCanvas from './BaseShapeCanvas.vue'
+import { useShapeCanvas } from '@/composables/useShapeCanvas'
 
 const props = defineProps<{
   modelValue?: { points: { x: number, y: number }[], isClosed: boolean }
@@ -14,9 +11,15 @@ const props = defineProps<{
 
 const shape = ref(props.modelValue || { points: [] as { x: number, y: number }[], isClosed: false })
 
-const canvasEl = shallowRef<HTMLCanvasElement | null>(null)
-const canvas = shallowRef<any | null>(null)
-const activeObject = shallowRef<any>(null)
+const {
+  canvasEl,
+  canvas,
+  activeObject,
+  initCanvas,
+  deleteSelected,
+  addCabinet,
+  addDoor,
+} = useShapeCanvas()
 
 // 模态框控制
 const showEditModal = ref(false)
@@ -36,7 +39,6 @@ const primaryColor = '#3B66F5'
 const redColor = '#ef4444'
 const snapColor = '#f59e0b'
 const successColor = '#10b981'
-const doorColor = '#9CA3AF'
 
 // 常规配置
 const SNAP_THRESHOLD_SCREEN = 10
@@ -114,6 +116,17 @@ function updateViewport() {
 function rebuildShape(snappedPoint: any = null, skipViewportUpdate = false) {
   if (!canvas.value)
     return
+
+  // 0. 检查并校正画布尺寸 (解决 v-show 初始化问题)
+  const container = canvasEl.value?.parentElement
+  if (container && container.clientWidth > 0 && container.clientHeight > 0) {
+    if (canvas.value.getWidth() !== container.clientWidth || canvas.value.getHeight() !== container.clientHeight) {
+      canvas.value.setDimensions({
+        width: container.clientWidth,
+        height: container.clientHeight,
+      })
+    }
+  }
 
   // 1. 视口管理：交互中（skipViewportUpdate=true）不调整视口，防止位移感
   if (!skipViewportUpdate) {
@@ -301,33 +314,13 @@ function drawLengthLabel(p1: { x: number, y: number }, p2: { x: number, y: numbe
   canvas.value?.add(label)
 }
 
-function initCanvas() {
-  if (!canvasEl.value)
-    return
-  const container = canvasEl.value.parentElement
-
-  canvas.value = new Canvas(canvasEl.value, {
-    backgroundColor: '#ffffff',
-    width: container?.clientWidth || 300,
-    height: container?.clientHeight || 400,
-    selection: false,
-    preserveObjectStacking: true,
-  })
-
-  canvas.value.on('mouse:down', handleMouseDown)
-  canvas.value.on('mouse:move', handleMouseMove)
-  canvas.value.on('mouse:up', handleMouseUp)
-
-  canvas.value.on('selection:created', (evt: any) => {
-    activeObject.value = evt.selected?.[0] as CanvasObject
-  })
-  canvas.value.on('selection:updated', (evt: any) => {
-    activeObject.value = evt.selected?.[0] as CanvasObject
-  })
-  canvas.value.on('selection:cleared', () => {
-    activeObject.value = null
-  })
-
+function initPolyCanvas() {
+  initCanvas({ height: 400 })
+  if (canvas.value) {
+    canvas.value.on('mouse:down', handleMouseDown)
+    canvas.value.on('mouse:move', handleMouseMove)
+    canvas.value.on('mouse:up', handleMouseUp)
+  }
   rebuildShape()
 }
 
@@ -424,36 +417,37 @@ function handleMouseMove(opt: any) {
     const { points } = shape.value
     const i = draggingSideIdx.value
     const j = (i + 1) % points.length
-    
+
     // 使用鼠标作为主驱动位移 dx/dy
     const rawDx = pointer.x - lastPointer.value.x
     const rawDy = pointer.y - lastPointer.value.y
-    
+
     // 获取端点预估的新位置进行吸附探测 (判断边上的端点是否命中吸附)
     const futureI = { x: points[i].x + rawDx, y: points[i].y + rawDy }
     const finalSnap = getSnappedPoint(futureI, [i, j])
-    
+
     // 如果没有吸附，也可以尝试端点 J
     let finalSnappedPos = finalSnap
     if (finalSnap.snaps.length === 0) {
       const futureJ = { x: points[j].x + rawDx, y: points[j].y + rawDy }
       const snapJFull = getSnappedPoint(futureJ, [i, j])
-      if (snapJFull.snaps.length > 0) finalSnappedPos = snapJFull
+      if (snapJFull.snaps.length > 0)
+        finalSnappedPos = snapJFull
     }
-    
+
     // 计算最终生效的位移：如果命中吸附就按吸附对齐，否则按鼠标原样移动
-    const actualDx = finalSnappedPos.snaps.some(s => s.type === 'v') 
-      ? (finalSnappedPos.x - points[finalSnappedPos === finalSnap ? i : j].x) 
+    const actualDx = finalSnappedPos.snaps.some(s => s.type === 'v')
+      ? (finalSnappedPos.x - points[finalSnappedPos === finalSnap ? i : j].x)
       : rawDx
-    const actualDy = finalSnappedPos.snaps.some(s => s.type === 'h') 
-      ? (finalSnappedPos.y - points[finalSnappedPos === finalSnap ? i : j].y) 
+    const actualDy = finalSnappedPos.snaps.some(s => s.type === 'h')
+      ? (finalSnappedPos.y - points[finalSnappedPos === finalSnap ? i : j].y)
       : rawDy
-    
+
     points[i].x += actualDx
     points[i].y += actualDy
     points[j].x += actualDx
     points[j].y += actualDy
-    
+
     lastPointer.value = { ...pointer } // 鼠标轨迹平滑记录
     rebuildShape(finalSnappedPos, true)
   }
@@ -572,120 +566,13 @@ function closeShape() {
   }
 }
 
-function deleteSelected() {
-  if (!canvas.value || !activeObject.value)
-    return
-  const obj = activeObject.value as CanvasObject
-  if (obj.associatedLabel?.text === '烟柜')
-    return
-  if (obj.associatedLabel)
-    canvas.value.remove(obj.associatedLabel)
-  canvas.value.remove(obj)
-  canvas.value.discardActiveObject()
-  canvas.value.renderAll()
-}
-
-function addCabinet() {
-  if (!canvas.value)
-    return
-  const existing = canvas.value.getObjects().find((o: any) => o.associatedLabel?.text === '烟柜')
-  if (existing)
-    return
-
-  const cabinet = new Rect({
-    left: 100,
-    top: 100,
-    width: 60,
-    height: 40,
-    fill: 'rgba(239, 68, 68, 0.1)',
-    stroke: redColor,
-    strokeWidth: 2,
-    cornerColor: redColor,
-    cornerSize: 8,
-    transparentCorners: false,
-    strokeUniform: true,
-  })
-  const label = new IText('烟柜', {
-    fontSize: 12,
-    fill: redColor,
-    fontWeight: 'bold',
-    selectable: false,
-    evented: false,
-    originX: 'center',
-    originY: 'center',
-  })
-  ;(cabinet as any).associatedLabel = label
-  const sync = () => {
-    label.set({
-      left: cabinet.getCenterPoint().x,
-      top: cabinet.getCenterPoint().y,
-      angle: cabinet.angle,
-    })
-  }
-  cabinet.on('moving', sync)
-  cabinet.on('scaling', sync)
-  cabinet.on('rotating', sync)
-  canvas.value.add(cabinet, label)
-  sync()
-  canvas.value.setActiveObject(cabinet)
-  canvas.value.renderAll()
-}
-
-function addDoor() {
-  if (!canvas.value)
-    return
-  const door = new Rect({
-    left: 150,
-    top: 150,
-    width: 30,
-    height: 10,
-    fill: '#ffffff',
-    stroke: doorColor,
-    strokeWidth: 1,
-    cornerColor: doorColor,
-    cornerSize: 8,
-    transparentCorners: false,
-    strokeUniform: true,
-  })
-  const label = new IText('大门', {
-    fontSize: 10,
-    fill: doorColor,
-    fontWeight: 'bold',
-    selectable: false,
-    evented: false,
-    originX: 'center',
-    originY: 'center',
-  })
-  ;(door as any).associatedLabel = label
-  const sync = () => {
-    label.set({
-      left: door.getCenterPoint().x,
-      top: door.getCenterPoint().y,
-      angle: door.angle,
-    })
-  }
-  door.on('moving', sync)
-  door.on('scaling', sync)
-  door.on('rotating', sync)
-  canvas.value.add(door, label)
-  sync()
-  canvas.value.setActiveObject(door)
-  canvas.value.renderAll()
-}
-
 onMounted(() => {
-  setTimeout(initCanvas, 50)
-})
-
-onUnmounted(() => {
-  if (canvas.value) {
-    canvas.value.dispose()
-    canvas.value = null
-  }
+  setTimeout(initPolyCanvas, 50)
 })
 
 defineExpose({
   shape,
+  rebuildShape,
   toDataURL: () => {
     if (!canvas.value)
       return ''
@@ -709,77 +596,48 @@ defineExpose({
       </div>
     </div>
 
-    <!-- Preview Area -->
-    <div :class="[readOnly ? 'h-64 border-none rounded-lg' : 'h-80 shadow-sm border rounded-2xl']" class="p-4 bg-white flex flex-col items-center justify-center relative overflow-hidden">
-      <div class="canvas-wrapper">
+    <BaseShapeCanvas
+      :read-only="readOnly"
+      :active-object="activeObject"
+      height-class="h-80"
+      :show-add-cabinet="shape.isClosed"
+      @add-door="addDoor(150, 150)"
+      @delete-selected="deleteSelected"
+      @add-cabinet="addCabinet(100, 100)"
+    >
+      <template #canvas>
         <canvas ref="canvasEl" />
-      </div>
-    </div>
+      </template>
 
-    <!-- Controls Toolbar -->
-    <div v-if="!readOnly" class="px-1 flex flex-col gap-4">
-      <!-- Polygon Actions -->
-      <div class="flex gap-2">
-        <button
-          class="text-xs font-bold px-3 py-1.5 rounded-xl flex flex-1 gap-1 shadow-sm transition-all items-center justify-center active:scale-95"
-          :class="isSnapEnabled ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-400 border border-slate-200'"
-          @click="isSnapEnabled = !isSnapEnabled"
-        >
-          <span class="rounded-full h-1.5 w-1.5" :class="isSnapEnabled ? 'bg-amber-500' : 'bg-slate-300'" />
-          吸附: {{ isSnapEnabled ? '开' : '关' }}
-        </button>
-        <van-button v-if="!shape.isClosed" size="small" type="primary" plain class="flex-1 !rounded-xl" :disabled="shape.points.length < 3" @click="closeShape">
-          闭合
-        </van-button>
-        <van-button size="small" plain class="flex-1 !rounded-xl" :disabled="shape.points.length === 0" @click="undo">
-          撤销
-        </van-button>
-        <van-button size="small" plain class="flex-1 !rounded-xl" :disabled="shape.points.length === 0" @click="clear">
-          清空
-        </van-button>
-      </div>
+      <template #toolbar>
+        <!-- Polygon Actions -->
+        <div class="flex gap-2">
+          <button
+            class="text-xs font-bold px-3 py-1.5 rounded-xl flex flex-1 gap-1 shadow-sm transition-all items-center justify-center active:scale-95"
+            :class="isSnapEnabled ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-400 border border-slate-200'"
+            @click="isSnapEnabled = !isSnapEnabled"
+          >
+            <span class="rounded-full h-1.5 w-1.5" :class="isSnapEnabled ? 'bg-amber-500' : 'bg-slate-300'" />
+            吸附: {{ isSnapEnabled ? '开' : '关' }}
+          </button>
+          <van-button v-if="!shape.isClosed" size="small" type="primary" plain class="flex-1 !rounded-xl" :disabled="shape.points.length < 3" @click="closeShape">
+            闭合
+          </van-button>
+          <van-button size="small" plain class="flex-1 !rounded-xl" :disabled="shape.points.length === 0" @click="undo">
+            撤销
+          </van-button>
+          <van-button size="small" plain class="flex-1 !rounded-xl" :disabled="shape.points.length === 0" @click="clear">
+            清空
+          </van-button>
+        </div>
+      </template>
 
-      <!-- General Actions -->
-      <div class="gap-3 grid grid-cols-2">
-        <van-button icon="plus" plain size="small" type="primary" block class="shadow-sm !rounded-xl" @click="addDoor">
-          添加大门
-        </van-button>
-        <van-button
-          v-if="activeObject && (activeObject.associatedLabel?.text !== '烟柜' && !activeObject.name?.startsWith('room_'))"
-          icon="delete"
-          plain
-          size="small"
-          type="danger"
-          block
-          class="shadow-sm !rounded-xl"
-          @click="deleteSelected"
-        >
-          删除选中
-        </van-button>
-      </div>
-
-      <van-button v-if="shape.isClosed" icon="shop-o" size="small" type="primary" block class="shadow-sm !rounded-xl" @click="addCabinet">
-        添加烟柜
-      </van-button>
-    </div>
-
-    <!-- 边长修改弹窗 -->
-    <van-dialog v-model:show="showEditModal" title="修改边长" show-cancel-button @confirm="applyNewLength">
-      <div class="p-6">
-        <van-field v-model="newLength" type="number" label="长度(m)" placeholder="请输入新长度" input-align="right" step="0.1" autofocus />
-      </div>
-    </van-dialog>
+      <!-- 边长修改弹窗 -->
+      <van-dialog v-model:show="showEditModal" title="修改边长" show-cancel-button @confirm="applyNewLength">
+        <div class="p-6">
+          <van-field v-model="newLength" type="number" label="长度(m)" placeholder="请输入新长度" input-align="right" step="0.1" autofocus />
+        </div>
+      </van-dialog>
+    </BaseShapeCanvas>
   </div>
 </template>
-
-<style scoped>
-.canvas-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.canvas-container) {
-  margin: 0 auto;
-}
-</style>

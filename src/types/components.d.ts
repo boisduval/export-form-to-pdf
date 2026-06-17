@@ -14,6 +14,7 @@ declare module 'vue' {
     AppFooter: typeof import('./../components/AppFooter.vue')['default']
     AppHeader: typeof import('./../components/AppHeader.vue')['default']
     AppTag: typeof import('./../components/AppTag.vue')['default']
+    BaseShapeCanvas: typeof import('./../components/BaseShapeCanvas.vue')['default']
     Chart: typeof import('./../components/Chart/index.vue')['default']
     DrawingStep: typeof import('./../components/DrawingStep.vue')['default']
     FormStep: typeof import('./../components/FormStep.vue')['default']

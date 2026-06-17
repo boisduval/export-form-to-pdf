@@ -1,11 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 
 const shapeType = ref<'rect' | 'trap' | 'poly'>('rect')
 
 const rectRef = ref()
 const trapRef = ref()
 const polyRef = ref()
+
+watch(shapeType, () => {
+  nextTick(() => {
+    if (shapeType.value === 'rect')
+      rectRef.value?.drawRoom?.()
+    else if (shapeType.value === 'trap')
+      trapRef.value?.drawRoom?.()
+    else if (shapeType.value === 'poly')
+      polyRef.value?.rebuildShape?.()
+  })
+})
 
 defineExpose({
   getShapeData: () => {

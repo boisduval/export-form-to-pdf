@@ -12,7 +12,7 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <div
-    class="flex font-bold items-center justify-center px-1 py-0.2 rounded text-[9px] tracking-tight transition-all"
+    class="text-[9px] tracking-tight font-bold px-1 py-0.2 rounded flex transition-all items-center justify-center"
     :class="[
       type === 'primary' && 'bg-primary/10 text-primary',
       type === 'primary-light' && 'bg-primary/5 text-primary/60',
