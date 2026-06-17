@@ -21,6 +21,8 @@ const {
 } = useShapeCanvas()
 
 let roomGroup: (Polygon | IText)[] = [] // 记录房间轮廓相关的对象
+let lastCw = 0
+let lastCh = 0
 
 const primaryColor = '#3B66F5'
 
@@ -132,13 +134,16 @@ function drawRoom() {
   canvas.value.add(...roomGroup)
   roomGroup.forEach(obj => canvas.value?.sendObjectToBack(obj))
 
-  // Dynamically reposition cabinet and door to cling to walls
-  const cabX = L + (soff - sminX)
-  const cabY = ch / 2 - sh / 2
-  const doorX = L - sminX
-  const doorY = ch / 2 + sh / 2
-
-  repositionPresetObjects(cabX, cabY, doorX, doorY)
+  // Dynamically reposition cabinet and door to cling to walls ONLY when canvas size changes (e.g. initial load or resize)
+  if (cw !== lastCw || ch !== lastCh) {
+    lastCw = cw
+    lastCh = ch
+    const cabX = L + (soff - sminX)
+    const cabY = ch / 2 - sh / 2
+    const doorX = L - sminX
+    const doorY = ch / 2 + sh / 2
+    repositionPresetObjects(cabX, cabY, doorX, doorY)
+  }
   canvas.value.renderAll()
 }
 
