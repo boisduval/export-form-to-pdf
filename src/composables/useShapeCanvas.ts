@@ -109,6 +109,13 @@ export function useShapeCanvas() {
       strokeUniform: true,
     })
 
+    cabinet.setControlsVisibility({
+      mt: false,
+      mb: false,
+      ml: false,
+      mr: false,
+    })
+
     const label = new IText('烟柜', {
       fontSize: 12,
       fill: redColor,
@@ -131,7 +138,12 @@ export function useShapeCanvas() {
     }
 
     cabinet.on('moving', syncLabel)
-    cabinet.on('scaling', syncLabel)
+    cabinet.on('scaling', () => {
+      cabinet.set({
+        scaleY: cabinet.scaleX,
+      })
+      syncLabel()
+    })
     cabinet.on('rotating', syncLabel)
 
     canvas.value.add(cabinet, label)
@@ -161,6 +173,16 @@ export function useShapeCanvas() {
       cornerSize: 8,
       transparentCorners: false,
       strokeUniform: true,
+      lockScalingY: true,
+    })
+
+    door.setControlsVisibility({
+      mt: false,
+      mb: false,
+      tl: false,
+      tr: false,
+      bl: false,
+      br: false,
     })
 
     const label = new IText('大门', {
