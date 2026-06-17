@@ -37,7 +37,6 @@ const startPointer = ref<{ x: number, y: number } | null>(null)
 const primaryColor = '#3B66F5'
 const redColor = '#ef4444'
 const snapColor = '#f59e0b'
-const successColor = '#10b981'
 
 // 常规配置
 const SNAP_THRESHOLD_SCREEN = 10
@@ -192,9 +191,9 @@ function rebuildShape(snappedPoint: any = null, skipViewportUpdate = false) {
   let outline: any
   if (isClosed) {
     outline = new Polygon(fabricPoints, {
-      fill: 'rgba(16, 185, 129, 0.05)',
-      stroke: successColor,
-      strokeWidth: 3 / zoom,
+      fill: 'transparent',
+      stroke: primaryColor,
+      strokeWidth: 2 / zoom,
       selectable: false,
       evented: false,
       name: 'room_outline',
