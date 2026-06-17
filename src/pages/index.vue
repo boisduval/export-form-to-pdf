@@ -21,6 +21,10 @@ const templates = [
   { id: 2, name: '实地核查普通版', type: 'DOCX', value: 'normal' },
   { id: 3, name: '新实地勘验普通版 1000平方米', type: 'DOCX', value: 'large' },
   { id: 4, name: '实地核查普通版 (排队)', type: 'DOCX', value: 'queue' },
+  { id: 5, name: '残疾人', type: 'DOCX', value: 'disabled' },
+  { id: 6, name: '实地核查普通版(同网格搬迁)', type: 'DOCX', value: 'relocation' },
+  { id: 7, name: '原法人死亡', type: 'DOCX', value: 'deceased' },
+  { id: 8, name: '不予受理(距离)', type: 'DOCX', value: 'reject_distance' },
 ]
 
 const selectedTemplateName = computed(() => {
@@ -78,7 +82,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="text-#333 bg-gray-50 flex flex-col min-h-screen">
+  <div class="text-#333 flex flex-col min-h-screen from-blue-50 to-indigo-50/50 via-sky-50 bg-gradient-to-b">
     <!-- Consolidated Header & Progress Section -->
     <AppHeader
       :active="active"
