@@ -12,7 +12,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <nav class="pb-safe px-8 border-t border-gray-100 bg-white/95 flex h-24 w-full shadow-[0_-4px_20px_rgba(0,0,0,0.03)] items-center bottom-0 left-0 justify-between fixed z-50 backdrop-blur-md">
+  <nav class="pb-safe px-8 border-t border-gray-100 bg-white/95 flex h-18 w-full shadow-[0_-4px_20px_rgba(0,0,0,0.03)] items-center bottom-0 left-0 justify-between fixed z-50 backdrop-blur-md">
     <!-- Previous Button -->
     <div
       class="flex flex-col cursor-pointer transition-all duration-200 items-center justify-center"

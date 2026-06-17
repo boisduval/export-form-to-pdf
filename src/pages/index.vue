@@ -99,7 +99,7 @@ async function onSubmit() {
     />
 
     <!-- Step Content -->
-    <div class="px-6 pb-32 pt-1 flex-1 overflow-y-auto">
+    <div class="px-6 pb-24 pt-1 flex-1 overflow-y-auto">
       <TemplateStep
         v-show="active === 0"
         v-model="selectedTemplate"
