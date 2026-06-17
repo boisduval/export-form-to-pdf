@@ -242,6 +242,13 @@ export function useShapeCanvas() {
     if (!canvas.value)
       return
 
+    // 如果已经存在大门，则不重复添加
+    const existingDoor = canvas.value.getObjects().find(
+      obj => (obj as CanvasObject).associatedLabel?.text === '大门',
+    )
+    if (existingDoor)
+      return
+
     const dLeft = left ?? canvas.value.getWidth() / 2
     const dTop = top ?? canvas.value.getHeight() / 2
 
