@@ -1,5 +1,5 @@
 import { onUnmounted, shallowRef } from 'vue'
-import { Canvas, IText, Rect } from 'fabric'
+import { Canvas, Control, controlsUtils, IText, Rect } from 'fabric'
 import type { FabricObject } from 'fabric'
 
 export interface CanvasObject extends FabricObject {
@@ -13,6 +13,61 @@ export function useShapeCanvas() {
 
   const redColor = '#ef4444'
   const doorColor = '#9CA3AF'
+
+  function renderControlIcon(ctx: CanvasRenderingContext2D, left: number, top: number, type: 'drag' | 'rotate', color: string) {
+    ctx.save()
+    ctx.translate(left, top)
+
+    // Draw circle background
+    ctx.beginPath()
+    ctx.arc(0, 0, 8, 0, Math.PI * 2)
+    ctx.fillStyle = color
+    ctx.fill()
+
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 1.2
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+
+    if (type === 'drag') {
+      // Horizontal line & arrows
+      ctx.beginPath()
+      ctx.moveTo(-5, 0)
+      ctx.lineTo(5, 0)
+      ctx.moveTo(-3, -2)
+      ctx.lineTo(-5, 0)
+      ctx.lineTo(-3, 2)
+      ctx.moveTo(3, -2)
+      ctx.lineTo(5, 0)
+      ctx.lineTo(3, 2)
+
+      // Vertical line & arrows
+      ctx.moveTo(0, -5)
+      ctx.lineTo(0, 5)
+      ctx.moveTo(-2, -3)
+      ctx.lineTo(0, -5)
+      ctx.lineTo(2, -3)
+      ctx.moveTo(-2, 3)
+      ctx.lineTo(0, 5)
+      ctx.lineTo(2, 3)
+      ctx.stroke()
+    }
+    else if (type === 'rotate') {
+      // Draw circular arrow icon
+      ctx.beginPath()
+      ctx.arc(0, 0.5, 4, -Math.PI / 4, Math.PI * 5 / 4)
+      ctx.stroke()
+
+      // Arrow head at the end
+      ctx.beginPath()
+      ctx.moveTo(0.5, -3.5)
+      ctx.lineTo(4.5, -3.5)
+      ctx.lineTo(4.5, 0.5)
+      ctx.stroke()
+    }
+
+    ctx.restore()
+  }
 
   function initCanvas(options: { width?: number, height?: number } = {}) {
     if (!canvasEl.value)
@@ -116,6 +171,32 @@ export function useShapeCanvas() {
       mr: false,
     })
 
+    cabinet.controls.dragHandle = new Control({
+      x: 0,
+      y: 0.5,
+      offsetX: 0,
+      offsetY: 20,
+      actionHandler: controlsUtils.dragHandler,
+      cursorStyle: 'move',
+      actionName: 'drag',
+      withConnection: true,
+      sizeX: 16,
+      sizeY: 16,
+      touchSizeX: 28,
+      touchSizeY: 28,
+      render: (ctx, left, top) => renderControlIcon(ctx, left, top, 'drag', redColor),
+    })
+
+    if (cabinet.controls.mtr) {
+      cabinet.controls.mtr.offsetY = -20 // shorter connection line
+      cabinet.controls.mtr.withConnection = true
+      cabinet.controls.mtr.sizeX = 16
+      cabinet.controls.mtr.sizeY = 16
+      cabinet.controls.mtr.touchSizeX = 28
+      cabinet.controls.mtr.touchSizeY = 28
+      cabinet.controls.mtr.render = (ctx, left, top) => renderControlIcon(ctx, left, top, 'rotate', redColor)
+    }
+
     const label = new IText('烟柜', {
       fontSize: 12,
       fill: redColor,
@@ -189,6 +270,32 @@ export function useShapeCanvas() {
       bl: false,
       br: false,
     })
+
+    door.controls.dragHandle = new Control({
+      x: 0,
+      y: 0.5,
+      offsetX: 0,
+      offsetY: 20,
+      actionHandler: controlsUtils.dragHandler,
+      cursorStyle: 'move',
+      actionName: 'drag',
+      withConnection: true,
+      sizeX: 16,
+      sizeY: 16,
+      touchSizeX: 28,
+      touchSizeY: 28,
+      render: (ctx, left, top) => renderControlIcon(ctx, left, top, 'drag', doorColor),
+    })
+
+    if (door.controls.mtr) {
+      door.controls.mtr.offsetY = -20 // shorter connection line
+      door.controls.mtr.withConnection = true
+      door.controls.mtr.sizeX = 16
+      door.controls.mtr.sizeY = 16
+      door.controls.mtr.touchSizeX = 28
+      door.controls.mtr.touchSizeY = 28
+      door.controls.mtr.render = (ctx, left, top) => renderControlIcon(ctx, left, top, 'rotate', doorColor)
+    }
 
     const label = new IText('大门', {
       fontSize: 10,
