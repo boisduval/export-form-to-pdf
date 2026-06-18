@@ -103,9 +103,11 @@ function renderScene() {
 
   const WALL_HEIGHT = 2.5
   const CABINET_HEIGHT = 2.0
-  const DOOR_HEIGHT = 2.0
+
+  let roomOutlinePoints: { x: number, y: number }[] = []
 
   const drawWalls = (points: { x: number, y: number }[]) => {
+    roomOutlinePoints = points
     if (points.length < 2)
       return
 
@@ -178,22 +180,92 @@ function renderScene() {
     for (let i = 0; i < points.length; i++) {
       const p1 = points[i]
       const p2 = points[(i + 1) % points.length]
-      const dx = p2.x - p1.x
-      const dy = p2.y - p1.y
-      const dist = Math.hypot(dx, dy)
 
-      const wallGeo = new THREE.BoxGeometry(dist, WALL_HEIGHT, 0.4)
-      const wallMesh = new THREE.Mesh(wallGeo, wallMat)
+      // Calculate doors overlapping this wall segment
+      const segmentDoors: { tStart: number, tEnd: number }[] = []
+      const wallVectorX = p2.x - p1.x
+      const wallVectorY = p2.y - p1.y
+      const segmentLength = Math.hypot(wallVectorX, wallVectorY)
 
-      const midX = (p1.x + p2.x) / 2
-      const midY = (p1.y + p2.y) / 2
-      const angle = Math.atan2(dy, dx)
+      if (segmentLength > 0.01) {
+        subObjects?.forEach((obj: any) => {
+          const isDoor = obj.name !== '烟柜' && obj.type !== '烟柜'
+          if (!isDoor)
+            return
 
-      wallMesh.position.set(midX, WALL_HEIGHT / 2, midY)
-      wallMesh.rotation.y = -angle
-      wallMesh.castShadow = true
-      wallMesh.receiveShadow = true
-      scene?.add(wallMesh)
+          const doorX = (obj.left - centerX) / 10
+          const doorY = (obj.top - centerY) / 10
+          const doorW = obj.width / 10
+
+          // Project door center onto wall segment
+          const apX = doorX - p1.x
+          const apY = doorY - p1.y
+          const t = (apX * wallVectorX + apY * wallVectorY) / (segmentLength * segmentLength)
+
+          if (t >= -0.05 && t <= 1.05) {
+            const projX = p1.x + t * wallVectorX
+            const projY = p1.y + t * wallVectorY
+            const distToWall = Math.hypot(doorX - projX, doorY - projY)
+
+            // If the door is close to the wall (within 0.8 meters)
+            if (distToWall < 0.8) {
+              const clampedT = Math.max(0, Math.min(1, t))
+              const tHalf = (doorW / 2) / segmentLength
+              segmentDoors.push({
+                tStart: Math.max(0, clampedT - tHalf),
+                tEnd: Math.min(1, clampedT + tHalf),
+              })
+            }
+          }
+        })
+      }
+
+      // Sort and merge intervals to split the wall
+      segmentDoors.sort((a, b) => a.tStart - b.tStart)
+      const wallIntervals: { start: number, end: number }[] = []
+      let currentStart = 0
+
+      segmentDoors.forEach((door) => {
+        if (door.tStart > currentStart + 0.01) {
+          wallIntervals.push({ start: currentStart, end: door.tStart })
+        }
+        currentStart = Math.max(currentStart, door.tEnd)
+      })
+
+      if (currentStart < 0.99) {
+        wallIntervals.push({ start: currentStart, end: 1 })
+      }
+
+      // Draw the segmented walls
+      wallIntervals.forEach((interval) => {
+        const startPoint = {
+          x: p1.x + interval.start * wallVectorX,
+          y: p1.y + interval.start * wallVectorY,
+        }
+        const endPoint = {
+          x: p1.x + interval.end * wallVectorX,
+          y: p1.y + interval.end * wallVectorY,
+        }
+
+        const dx = endPoint.x - startPoint.x
+        const dy = endPoint.y - startPoint.y
+        const dist = Math.hypot(dx, dy)
+        if (dist < 0.05)
+          return
+
+        const wallGeo = new THREE.BoxGeometry(dist, WALL_HEIGHT, 0.4)
+        const wallMesh = new THREE.Mesh(wallGeo, wallMat)
+
+        const midX = (startPoint.x + endPoint.x) / 2
+        const midY = (startPoint.y + endPoint.y) / 2
+        const angle = Math.atan2(dy, dx)
+
+        wallMesh.position.set(midX, WALL_HEIGHT / 2, midY)
+        wallMesh.rotation.y = -angle
+        wallMesh.castShadow = true
+        wallMesh.receiveShadow = true
+        scene?.add(wallMesh)
+      })
     }
   }
 
@@ -233,14 +305,39 @@ function renderScene() {
     drawWalls(points)
   }
 
-  // Draw Cabinet & Door (Enhanced Logic - divided by 10)
+  function createGoldenHandle(isOuter: boolean) {
+    const h = new THREE.Group()
+    const g = new THREE.MeshStandardMaterial({ color: 0xDAA520, metalness: 1.0, roughness: 0.15 })
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.02, 16), g)
+    b.rotation.z = Math.PI / 2
+    h.add(b)
+    const s = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.08, 12), g)
+    s.rotation.z = Math.PI / 2
+    s.position.x = isOuter ? -0.05 : 0.05
+    h.add(s)
+    const l = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.35, 12), g)
+    l.rotation.x = Math.PI / 2
+    l.position.set(isOuter ? -0.1 : 0.1, 0, -0.15)
+    h.add(l)
+    h.traverse((c) => {
+      if ((c as any).isMesh)
+        c.castShadow = false
+    })
+    return h
+  }
+
+  // Draw Cabinet & Door
   subObjects?.forEach((obj: any) => {
     const isCabinet = obj.name === '烟柜' || obj.type === '烟柜'
-    const h = isCabinet ? CABINET_HEIGHT : DOOR_HEIGHT
+    const h = isCabinet ? CABINET_HEIGHT : 2.5 // Door height is 2.5 to match wall height
 
     const group = new THREE.Group()
     const w = obj.width / 10
     const d = obj.height / 10
+
+    let groupX = (obj.left - centerX) / 10
+    let groupY = (obj.top - centerY) / 10
+    let groupRotationY = -THREE.MathUtils.degToRad(obj.angle)
 
     if (isCabinet) {
       // Simple Solid Cabinet
@@ -255,59 +352,74 @@ function renderScene() {
       group.add(mesh)
     }
     else {
-      // Enhanced Real Door
-      const doorDepth = 0.3 // Thick door panel
-      const frameDepth = 0.5 // Thicker frame
-      const frameWidth = 0.4 // Frame border width
+      // Find the closest wall segment to align the door
+      let minDistance = Infinity
+      if (roomOutlinePoints.length >= 2) {
+        for (let i = 0; i < roomOutlinePoints.length; i++) {
+          const p1 = roomOutlinePoints[i]
+          const p2 = roomOutlinePoints[(i + 1) % roomOutlinePoints.length]
+          const wallVectorX = p2.x - p1.x
+          const wallVectorY = p2.y - p1.y
+          const segmentLength = Math.hypot(wallVectorX, wallVectorY)
+          if (segmentLength < 0.01)
+            continue
 
-      // 1. Door Frame (U-shaped frame)
-      const frameColor = '#94a3b8' // Distinct gray frame for contrast
-      const frameMat = new THREE.MeshStandardMaterial({ color: frameColor, roughness: 0.6 })
+          const apX = groupX - p1.x
+          const apY = groupY - p1.y
+          const t = (apX * wallVectorX + apY * wallVectorY) / (segmentLength * segmentLength)
 
-      // Top bar
-      const topBarGeo = new THREE.BoxGeometry(w + frameWidth, 0.2, frameDepth)
-      const topBar = new THREE.Mesh(topBarGeo, frameMat)
-      topBar.position.set(0, h, 0)
-      group.add(topBar)
+          if (t >= -0.05 && t <= 1.05) {
+            const clampedT = Math.max(0, Math.min(1, t))
+            const projX = p1.x + clampedT * wallVectorX
+            const projY = p1.y + clampedT * wallVectorY
+            const distToWall = Math.hypot(groupX - projX, groupY - projY)
 
-      // Left bar
-      const sideBarGeo = new THREE.BoxGeometry(frameWidth, h, frameDepth)
-      const leftBar = new THREE.Mesh(sideBarGeo, frameMat)
-      leftBar.position.set(-(w + frameWidth) / 2 + frameWidth / 2, h / 2, 0)
-      group.add(leftBar)
+            if (distToWall < 0.8 && distToWall < minDistance) {
+              minDistance = distToWall
+              groupX = projX
+              groupY = projY
+              groupRotationY = -Math.atan2(wallVectorY, wallVectorX)
+            }
+          }
+        }
+      }
 
-      // Right bar
-      const rightBar = leftBar.clone()
-      rightBar.position.set((w + frameWidth) / 2 - frameWidth / 2, h / 2, 0)
-      group.add(rightBar)
+      // Realistic Door based on reference HTML
+      const woodLoader = new THREE.TextureLoader()
+      woodLoader.setCrossOrigin('anonymous')
 
-      // 2. Door Panel
-      const panelColor = '#f3f4f6' // Off-white panel distinct from #ffffff walls
-      const panelMat = new THREE.MeshStandardMaterial({ color: panelColor, roughness: 0.5, metalness: 0.05 })
-      const panelGeo = new THREE.BoxGeometry(w - 0.2, h - 0.1, doorDepth)
-      const panel = new THREE.Mesh(panelGeo, panelMat)
-      panel.position.set(0, (h - 0.1) / 2, 0)
-      panel.castShadow = true
-      panel.receiveShadow = true
-      group.add(panel)
+      const woodMat = new THREE.MeshStandardMaterial({
+        color: '#8b5a2b', // fallback wood brown
+        roughness: 0.7,
+      })
 
-      // 3. Door Handle
-      const handleMat = new THREE.MeshStandardMaterial({ color: '#cbd5e1', metalness: 0.9, roughness: 0.1 })
-      const handleGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8)
-      const handle = new THREE.Mesh(handleGeo, handleMat)
-      handle.rotation.z = Math.PI / 2
-      // Position handle on one side
-      handle.position.set(w / 2 - 0.6, h / 2, doorDepth / 2 + 0.1)
-      group.add(handle)
+      woodLoader.load(
+        'https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/wooden_garage_door/wooden_garage_door_diff_1k.png',
+        (tex) => {
+          woodMat.map = tex
+          woodMat.needsUpdate = true
+        },
+      )
 
-      const handlePlateGeo = new THREE.BoxGeometry(0.1, 0.4, 0.05)
-      const handlePlate = new THREE.Mesh(handlePlateGeo, handleMat)
-      handlePlate.position.set(w / 2 - 0.6, h / 2, doorDepth / 2 + 0.05)
-      group.add(handlePlate)
+      // Leaf (door depth is 0.3)
+      const leaf = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.3), woodMat)
+      leaf.position.y = h / 2
+      leaf.castShadow = true
+      leaf.receiveShadow = true
+      group.add(leaf)
+
+      // Handles
+      const oh = createGoldenHandle(true)
+      oh.position.set(w / 2 - 0.6, h / 2, 0.15)
+      group.add(oh)
+
+      const ih = createGoldenHandle(false)
+      ih.position.set(w / 2 - 0.6, h / 2, -0.15)
+      group.add(ih)
     }
 
-    group.position.set((obj.left - centerX) / 10, 0, (obj.top - centerY) / 10)
-    group.rotation.y = -THREE.MathUtils.degToRad(obj.angle)
+    group.position.set(groupX, 0, groupY)
+    group.rotation.y = groupRotationY
     scene?.add(group)
   })
 
