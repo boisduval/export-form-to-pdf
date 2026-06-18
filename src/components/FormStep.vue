@@ -69,7 +69,10 @@ defineExpose({
   <div class="mt-2 flex flex-col">
     <!-- 标题 1 -->
     <div class="px-1 pb-2 flex items-center justify-between">
-      <span class="text-sm text-gray-800 font-semibold">表单数据登记</span>
+      <div class="flex gap-2 items-center">
+        <div class="rounded-full bg-blue-500 h-3.5 w-1" />
+        <span class="text-sm text-gray-800 font-semibold">表单数据登记</span>
+      </div>
       <span class="text-[11px] text-gray-400 font-normal">请完善核查表单</span>
     </div>
 
@@ -98,7 +101,10 @@ defineExpose({
 
     <!-- 标题 2 （仅在选择核查模版时显示） -->
     <div v-if="isCheckTemplate" class="mt-5 px-1 pb-2 flex items-center justify-between">
-      <span class="text-sm text-gray-800 font-semibold">核查平面图</span>
+      <div class="flex gap-2 items-center">
+        <div class="rounded-full bg-emerald-500 h-3.5 w-1" />
+        <span class="text-sm text-gray-800 font-semibold">核查平面图</span>
+      </div>
       <span class="text-[11px] text-gray-400 font-normal">区域图绘制预览</span>
     </div>
 
