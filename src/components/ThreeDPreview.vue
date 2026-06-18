@@ -111,11 +111,11 @@ function renderScene() {
 
     // Floor
     const floorShape = new THREE.Shape()
-    floorShape.moveTo(points[0].x, points[0].y)
+    floorShape.moveTo(points[0].x, -points[0].y)
     for (let i = 1; i < points.length; i++) {
-      floorShape.lineTo(points[i].x, points[i].y)
+      floorShape.lineTo(points[i].x, -points[i].y)
     }
-    floorShape.lineTo(points[0].x, points[0].y)
+    floorShape.lineTo(points[0].x, -points[0].y)
 
     const loader = new THREE.TextureLoader()
     loader.setCrossOrigin('anonymous')
