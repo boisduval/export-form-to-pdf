@@ -49,8 +49,8 @@ function initThree() {
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setSize(width, height)
   renderer.setPixelRatio(window.devicePixelRatio)
-  renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFShadowMap
+  renderer.shadowMap.enabled = false
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.outputColorSpace = THREE.SRGBColorSpace
   canvasContainer.value.appendChild(renderer.domElement)
 
@@ -63,20 +63,8 @@ function initThree() {
 
   const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1.5) // Increased for bright white walls
   directionalLight.position.set(5, 15, 5)
-  directionalLight.castShadow = true
+  directionalLight.castShadow = false
 
-  // Set shadow camera bounds to cover the entire room area
-  directionalLight.shadow.camera.left = -20
-  directionalLight.shadow.camera.right = 20
-  directionalLight.shadow.camera.top = 20
-  directionalLight.shadow.camera.bottom = -20
-  directionalLight.shadow.camera.near = 0.5
-  directionalLight.shadow.camera.far = 40
-
-  // Improve shadow resolution and prevent shadow acne
-  directionalLight.shadow.mapSize.width = 1024
-  directionalLight.shadow.mapSize.height = 1024
-  directionalLight.shadow.bias = -0.001
   scene.add(directionalLight)
 
   // 6. Render current data
