@@ -1,5 +1,5 @@
 import { onUnmounted, shallowRef } from 'vue'
-import { Canvas, Control, controlsUtils, IText, Rect } from 'fabric'
+import { Canvas, Control, controlsUtils, IText, Polygon, Rect } from 'fabric'
 import type { FabricObject } from 'fabric'
 
 export interface CanvasObject extends FabricObject {
@@ -134,7 +134,7 @@ export function useShapeCanvas() {
     activeObject.value = null
   }
 
-  function addCabinet(left?: number, top?: number) {
+  function addCabinet(left?: number, top?: number, type: 'default' | 'l_shape' | 'convex' = 'default') {
     if (!canvas.value)
       return
 
@@ -148,21 +148,74 @@ export function useShapeCanvas() {
     const cLeft = left ?? canvas.value.getWidth() / 2
     const cTop = top ?? canvas.value.getHeight() / 2
 
-    const cabinet = new Rect({
-      left: cLeft,
-      top: cTop,
-      originX: 'center',
-      originY: 'center',
-      width: 45,
-      height: 30,
-      fill: 'rgba(239, 68, 68, 0.1)',
-      stroke: redColor,
-      strokeWidth: 2,
-      cornerColor: redColor,
-      cornerSize: 8,
-      transparentCorners: false,
-      strokeUniform: true,
-    })
+    let cabinet: FabricObject
+    const fill = 'rgba(239, 68, 68, 0.1)'
+
+    if (type === 'l_shape') {
+      const points = [
+        { x: -22.5, y: -15 },
+        { x: 22.5, y: -15 },
+        { x: 22.5, y: 0 },
+        { x: -7.5, y: 0 },
+        { x: -7.5, y: 15 },
+        { x: -22.5, y: 15 },
+      ]
+      cabinet = new Polygon(points, {
+        left: cLeft,
+        top: cTop,
+        originX: 'center',
+        originY: 'center',
+        fill,
+        stroke: redColor,
+        strokeWidth: 2,
+        cornerColor: redColor,
+        cornerSize: 8,
+        transparentCorners: false,
+        strokeUniform: true,
+      })
+    }
+    else if (type === 'convex') {
+      const points = [
+        { x: 7.5, y: 15 },
+        { x: -7.5, y: 15 },
+        { x: -7.5, y: 0 },
+        { x: -22.5, y: 0 },
+        { x: -22.5, y: -15 },
+        { x: 22.5, y: -15 },
+        { x: 22.5, y: 0 },
+        { x: 7.5, y: 0 },
+      ]
+      cabinet = new Polygon(points, {
+        left: cLeft,
+        top: cTop,
+        originX: 'center',
+        originY: 'center',
+        fill,
+        stroke: redColor,
+        strokeWidth: 2,
+        cornerColor: redColor,
+        cornerSize: 8,
+        transparentCorners: false,
+        strokeUniform: true,
+      })
+    }
+    else {
+      cabinet = new Rect({
+        left: cLeft,
+        top: cTop,
+        originX: 'center',
+        originY: 'center',
+        width: 45,
+        height: 30,
+        fill,
+        stroke: redColor,
+        strokeWidth: 2,
+        cornerColor: redColor,
+        cornerSize: 8,
+        transparentCorners: false,
+        strokeUniform: true,
+      })
+    }
 
     cabinet.setControlsVisibility({
       mt: false,
@@ -198,8 +251,8 @@ export function useShapeCanvas() {
     }
 
     const label = new IText('烟柜', {
-      fontSize: 12,
-      fill: redColor,
+      fontSize: 10,
+      fill: '#1e293b',
       fontWeight: 'bold',
       selectable: false,
       evented: false,
@@ -216,7 +269,7 @@ export function useShapeCanvas() {
         left: center.x,
         top: center.y,
         angle: cabinet.angle,
-        fontSize: 12 / zoom,
+        fontSize: 10 / zoom,
       })
       if (canvas.value) {
         canvas.value.bringObjectToFront(label)
@@ -234,6 +287,162 @@ export function useShapeCanvas() {
 
     canvas.value.add(cabinet, label)
     syncLabel()
+    canvas.value.setActiveObject(cabinet)
+    canvas.value.renderAll()
+  }
+
+  function updateCabinetShape(type: 'default' | 'l_shape' | 'convex') {
+    if (!canvas.value)
+      return
+
+    const existingCabinet = canvas.value.getObjects().find(
+      obj => (obj as CanvasObject).associatedLabel?.text === '烟柜',
+    )
+    if (!existingCabinet)
+      return
+
+    const left = existingCabinet.left
+    const top = existingCabinet.top
+    const angle = existingCabinet.angle
+    const label = (existingCabinet as CanvasObject).associatedLabel
+
+    // Remove old cabinet but KEEP label
+    canvas.value.remove(existingCabinet)
+
+    let cabinet: FabricObject
+    const fill = 'rgba(239, 68, 68, 0.1)'
+
+    if (type === 'l_shape') {
+      const points = [
+        { x: -22.5, y: -15 },
+        { x: 22.5, y: -15 },
+        { x: 22.5, y: 0 },
+        { x: -7.5, y: 0 },
+        { x: -7.5, y: 15 },
+        { x: -22.5, y: 15 },
+      ]
+      cabinet = new Polygon(points, {
+        left,
+        top,
+        angle,
+        originX: 'center',
+        originY: 'center',
+        fill,
+        stroke: redColor,
+        strokeWidth: 2,
+        cornerColor: redColor,
+        cornerSize: 8,
+        transparentCorners: false,
+        strokeUniform: true,
+      })
+    }
+    else if (type === 'convex') {
+      const points = [
+        { x: 7.5, y: 15 },
+        { x: -7.5, y: 15 },
+        { x: -7.5, y: 0 },
+        { x: -22.5, y: 0 },
+        { x: -22.5, y: -15 },
+        { x: 22.5, y: -15 },
+        { x: 22.5, y: 0 },
+        { x: 7.5, y: 0 },
+      ]
+      cabinet = new Polygon(points, {
+        left,
+        top,
+        angle,
+        originX: 'center',
+        originY: 'center',
+        fill,
+        stroke: redColor,
+        strokeWidth: 2,
+        cornerColor: redColor,
+        cornerSize: 8,
+        transparentCorners: false,
+        strokeUniform: true,
+      })
+    }
+    else {
+      cabinet = new Rect({
+        left,
+        top,
+        angle,
+        originX: 'center',
+        originY: 'center',
+        width: 45,
+        height: 30,
+        fill,
+        stroke: redColor,
+        strokeWidth: 2,
+        cornerColor: redColor,
+        cornerSize: 8,
+        transparentCorners: false,
+        strokeUniform: true,
+      })
+    }
+
+    cabinet.setControlsVisibility({
+      mt: false,
+      mb: false,
+      ml: false,
+      mr: false,
+    })
+
+    cabinet.controls.dragHandle = new Control({
+      x: 0,
+      y: 0.5,
+      offsetX: 0,
+      offsetY: 20,
+      actionHandler: controlsUtils.dragHandler,
+      cursorStyle: 'move',
+      actionName: 'drag',
+      withConnection: true,
+      sizeX: 16,
+      sizeY: 16,
+      touchSizeX: 28,
+      touchSizeY: 28,
+      render: (ctx, left, top) => renderControlIcon(ctx, left, top, 'drag', redColor),
+    })
+
+    if (cabinet.controls.mtr) {
+      cabinet.controls.mtr.offsetY = -20
+      cabinet.controls.mtr.withConnection = true
+      cabinet.controls.mtr.sizeX = 16
+      cabinet.controls.mtr.sizeY = 16
+      cabinet.controls.mtr.touchSizeX = 28
+      cabinet.controls.mtr.touchSizeY = 28
+      cabinet.controls.mtr.render = (ctx, left, top) => renderControlIcon(ctx, left, top, 'rotate', redColor)
+    }
+
+    if (label) {
+      ;(cabinet as CanvasObject).associatedLabel = label
+      const syncLabel = () => {
+        const center = cabinet.getCenterPoint()
+        const zoom = canvas.value?.getZoom() || 1
+        label.set({
+          left: center.x,
+          top: center.y,
+          angle: cabinet.angle,
+          fontSize: 10 / zoom,
+        })
+        if (canvas.value) {
+          canvas.value.bringObjectToFront(label)
+        }
+      }
+
+      cabinet.on('moving', syncLabel)
+      cabinet.on('scaling', () => {
+        cabinet.set({
+          scaleY: cabinet.scaleX,
+        })
+        syncLabel()
+      })
+      cabinet.on('rotating', syncLabel)
+
+      canvas.value.add(cabinet)
+      syncLabel()
+    }
+
     canvas.value.setActiveObject(cabinet)
     canvas.value.renderAll()
   }
@@ -306,7 +515,7 @@ export function useShapeCanvas() {
 
     const label = new IText('大门', {
       fontSize: 10,
-      fill: doorColor,
+      fill: '#1e293b',
       fontWeight: 'bold',
       selectable: false,
       evented: false,
@@ -340,8 +549,8 @@ export function useShapeCanvas() {
     canvas.value.renderAll()
   }
 
-  function presetCabinetAndDoor(cabX: number, cabY: number, doorX: number, doorY: number) {
-    addCabinet(cabX + 22.5, cabY + 15)
+  function presetCabinetAndDoor(cabX: number, cabY: number, doorX: number, doorY: number, type: 'default' | 'l_shape' | 'convex' = 'default') {
+    addCabinet(cabX + 22.5, cabY + 15, type)
     addDoor(doorX + 50, doorY - 7.5)
   }
 
@@ -402,6 +611,7 @@ export function useShapeCanvas() {
     resizeCanvas,
     deleteSelected,
     addCabinet,
+    updateCabinetShape,
     addDoor,
     presetCabinetAndDoor,
     repositionPresetObjects,

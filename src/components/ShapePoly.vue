@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { Circle, IText, Line, Point, Polygon, Polyline } from 'fabric'
 import BaseShapeCanvas from './BaseShapeCanvas.vue'
 import ThreeDPreview from './ThreeDPreview.vue'
@@ -19,6 +19,7 @@ const {
   initCanvas,
   presetCabinetAndDoor,
   removeCabinetAndDoor,
+  updateCabinetShape,
 } = useShapeCanvas()
 
 // 模态框控制
@@ -334,7 +335,7 @@ function initPolyCanvas() {
       if (p.y > maxY)
         maxY = p.y
     })
-    presetCabinetAndDoor(minX, minY, minX, maxY)
+    presetCabinetAndDoor(minX, minY, minX, maxY, props.cabinetType)
   }
 }
 
@@ -605,13 +606,18 @@ function closeShape() {
         if (p.y > maxY)
           maxY = p.y
       })
-      presetCabinetAndDoor(minX, minY, minX, maxY)
+      presetCabinetAndDoor(minX, minY, minX, maxY, props.cabinetType)
     }
   }
 }
 
 onMounted(() => {
   setTimeout(initPolyCanvas, 50)
+})
+watch(() => props.cabinetType, (newType) => {
+  if (newType) {
+    updateCabinetShape(newType)
+  }
 })
 
 const show3D = ref(false)

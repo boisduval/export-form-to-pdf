@@ -19,6 +19,7 @@ const {
   initCanvas,
   presetCabinetAndDoor,
   repositionPresetObjects,
+  updateCabinetShape,
 } = useShapeCanvas()
 
 let roomGroup: (Rect | IText)[] = [] // 记录房间轮廓相关的对象
@@ -115,7 +116,7 @@ function drawRoom() {
     const cabY = ch / 2 - sh / 2
     const doorX = cw / 2 - sw / 2
     const doorY = ch / 2 + sh / 2
-    presetCabinetAndDoor(cabX, cabY, doorX, doorY)
+    presetCabinetAndDoor(cabX, cabY, doorX, doorY, props.cabinetType)
     repositionPresetObjects(cabX, cabY, doorX, doorY)
   }
 
@@ -173,6 +174,12 @@ onMounted(() => {
 })
 
 watch(rect, drawRoom, { deep: true })
+
+watch(() => props.cabinetType, (newType) => {
+  if (newType) {
+    updateCabinetShape(newType)
+  }
+})
 
 defineExpose({
   rect,
