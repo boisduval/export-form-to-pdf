@@ -256,6 +256,14 @@ function renderScene() {
         scene?.add(wallMesh)
       })
     }
+
+    // Pillars at corners to fill gaps
+    const pillarGeo = new THREE.BoxGeometry(0.4, WALL_HEIGHT, 0.4)
+    points.forEach((p) => {
+      const pillar = new THREE.Mesh(pillarGeo, wallMat)
+      pillar.position.set(p.x, WALL_HEIGHT / 2, p.y)
+      scene?.add(pillar)
+    })
   }
 
   // Draw Room Outline (divided by 10 to scale to 1x meters)
