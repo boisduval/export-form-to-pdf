@@ -8,6 +8,7 @@ import { useShapeCanvas } from '@/composables/useShapeCanvas'
 const props = defineProps<{
   modelValue?: { points: { x: number, y: number }[], isClosed: boolean }
   readOnly?: boolean
+  cabinetType?: 'default' | 'l_shape' | 'convex'
 }>()
 
 const shape = ref(props.modelValue || { points: [] as { x: number, y: number }[], isClosed: false })
@@ -625,6 +626,7 @@ function getPreviewData() {
   const objects = canvas.value.getObjects().filter((o: any) => o.associatedLabel)
   const subObjects = objects.map((o: any) => ({
     type: o.associatedLabel.text,
+    cabinetType: o.associatedLabel.text === '烟柜' ? props.cabinetType : undefined,
     left: o.left,
     top: o.top,
     width: o.width * o.scaleX,

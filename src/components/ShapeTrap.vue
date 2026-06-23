@@ -8,6 +8,7 @@ import { useShapeCanvas } from '@/composables/useShapeCanvas'
 const props = defineProps<{
   modelValue?: { top: number, bottom: number, h: number, offset: number }
   readOnly?: boolean
+  cabinetType?: 'default' | 'l_shape' | 'convex'
 }>()
 
 const trap = ref(props.modelValue || { top: 30, bottom: 50, h: 30, offset: 10 })
@@ -197,6 +198,7 @@ function getPreviewData() {
   const objects = canvas.value.getObjects().filter(o => (o as any).associatedLabel)
   const subObjects = objects.map(o => ({
     type: (o as any).associatedLabel.text,
+    cabinetType: (o as any).associatedLabel.text === '烟柜' ? props.cabinetType : undefined,
     left: o.left,
     top: o.top,
     width: (o as any).width * (o as any).scaleX,

@@ -7,6 +7,8 @@ const rectRef = ref()
 const trapRef = ref()
 const polyRef = ref()
 
+const cabinetType = ref<'default' | 'l_shape' | 'convex'>('default')
+
 watch(shapeType, () => {
   nextTick(() => {
     if (shapeType.value === 'rect')
@@ -71,6 +73,7 @@ defineExpose({
     return {
       type: shapeType.value,
       data: { ...data },
+      cabinetType: cabinetType.value,
       image: compRef?.toDataURL(),
       calculatedArea: area,
     }
@@ -89,7 +92,7 @@ defineExpose({
           { type: 'poly', label: '自由绘制', desc: '多边形', icon: 'poly' },
         ]"
         :key="item.type"
-        class="px-1.5 py-3 rounded-xl flex flex-1 flex-col gap-1.5 cursor-pointer transition-all duration-300 items-center justify-center relative overflow-hidden active:scale-95"
+        class="px-1.5 py-3 rounded-xl border-none flex flex-1 flex-col gap-1.5 cursor-pointer transition-all duration-300 items-center justify-center relative overflow-hidden active:scale-95"
         :class="shapeType === item.type
           ? 'bg-white shadow-md shadow-slate-200/80 text-[#3B66F5] font-bold scale-[1.02] border border-slate-200/30'
           : 'text-slate-500 bg-transparent border border-transparent'"
@@ -131,11 +134,33 @@ defineExpose({
       </button>
     </div>
 
+    <!-- Cabinet Type Selector -->
+    <div class="flex flex-col gap-2">
+      <span class="text-xs text-slate-500 font-bold px-1">烟柜款式</span>
+      <div class="p-1 border border-slate-200/20 rounded-xl bg-slate-100/50 flex gap-1 shadow-inner backdrop-blur-md">
+        <button
+          v-for="item in [
+            { type: 'default', label: '默认烟柜' },
+            { type: 'l_shape', label: 'L型烟柜' },
+            { type: 'convex', label: '凸字型烟柜' },
+          ]"
+          :key="item.type"
+          class="text-xs font-semibold px-2 py-2 text-center rounded-lg border-none flex-1 cursor-pointer transition-all duration-300 active:scale-95"
+          :class="cabinetType === item.type
+            ? 'bg-white shadow-sm text-[#3B66F5] font-bold'
+            : 'text-slate-500 bg-transparent'"
+          @click="cabinetType = item.type as 'default' | 'l_shape' | 'convex'"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Dynamic Shape Component -->
     <div class="transition-all duration-500">
-      <ShapeRect v-show="shapeType === 'rect'" ref="rectRef" />
-      <ShapeTrap v-show="shapeType === 'trap'" ref="trapRef" />
-      <ShapePoly v-show="shapeType === 'poly'" ref="polyRef" />
+      <ShapeRect v-show="shapeType === 'rect'" ref="rectRef" :cabinet-type="cabinetType" />
+      <ShapeTrap v-show="shapeType === 'trap'" ref="trapRef" :cabinet-type="cabinetType" />
+      <ShapePoly v-show="shapeType === 'poly'" ref="polyRef" :cabinet-type="cabinetType" />
     </div>
   </div>
 </template>

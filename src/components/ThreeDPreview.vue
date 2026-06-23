@@ -337,8 +337,16 @@ function renderScene() {
 
     if (isCabinet) {
       const loader = new GLTFLoader()
+      let modelPath = '/models/danell_ridge_w556-48_ashley.glb' // 默认烟柜
+      if (obj.cabinetType === 'l_shape') {
+        modelPath = '/models/danell_ridge_w556-48_ashley.glb' // L型烟柜 (未来可在此处替换文件路径)
+      }
+      else if (obj.cabinetType === 'convex') {
+        modelPath = '/models/danell_ridge_w556-48_ashley.glb' // 凸字型烟柜 (未来可在此处替换文件路径)
+      }
+
       loader.load(
-        '/models/danell_ridge_w556-48_ashley.glb',
+        modelPath,
         (gltf) => {
           const model = gltf.scene.clone()
           const box = new THREE.Box3().setFromObject(model)
