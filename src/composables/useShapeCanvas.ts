@@ -257,7 +257,7 @@ export function useShapeCanvas() {
       top: dTop,
       originX: 'center',
       originY: 'center',
-      width: 50,
+      width: 100,
       height: 15,
       fill: '#ffffff',
       stroke: doorColor,
@@ -342,7 +342,7 @@ export function useShapeCanvas() {
 
   function presetCabinetAndDoor(cabX: number, cabY: number, doorX: number, doorY: number) {
     addCabinet(cabX + 22.5, cabY + 15)
-    addDoor(doorX + 25, doorY - 7.5)
+    addDoor(doorX + 50, doorY - 7.5)
   }
 
   function repositionPresetObjects(cabX: number, cabY: number, doorX: number, doorY: number) {
@@ -358,9 +358,9 @@ export function useShapeCanvas() {
 
     const door = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '大门')
     if (door) {
-      door.set({ left: doorX + 25, top: doorY - 7.5 })
+      door.set({ left: doorX + 50, top: doorY - 7.5 })
       door.setCoords()
-      ;(door as any).associatedLabel?.set({ left: doorX + 25, top: doorY - 7.5 })
+      ;(door as any).associatedLabel?.set({ left: doorX + 50, top: doorY - 7.5 })
     }
   }
 
