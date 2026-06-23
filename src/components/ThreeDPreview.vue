@@ -2,6 +2,7 @@
 import { onUnmounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 const props = defineProps<{
   show: boolean
@@ -90,7 +91,7 @@ function renderScene() {
   const centerY = canvasHeight / 2
 
   const WALL_HEIGHT = 2.5
-  const CABINET_HEIGHT = 2.0
+  const CABINET_HEIGHT = 2
 
   let roomOutlinePoints: { x: number, y: number }[] = []
 
@@ -295,7 +296,7 @@ function renderScene() {
 
   function createGoldenHandle(isOuter: boolean) {
     const h = new THREE.Group()
-    const g = new THREE.MeshStandardMaterial({ color: 0xDAA520, metalness: 1.0, roughness: 0.15 })
+    const g = new THREE.MeshStandardMaterial({ color: 0xDAA520, metalness: 1, roughness: 0.15 })
     const b = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.02, 16), g)
     b.rotation.z = Math.PI / 2
     h.add(b)
@@ -321,23 +322,39 @@ function renderScene() {
 
     const group = new THREE.Group()
     const w = obj.width / 10
-    const d = obj.height / 10
 
     let groupX = (obj.left - centerX) / 10
     let groupY = (obj.top - centerY) / 10
     let groupRotationY = -THREE.MathUtils.degToRad(obj.angle)
 
     if (isCabinet) {
-      // Simple Solid Cabinet
-      const geo = new THREE.BoxGeometry(w, h, d)
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0xEF9A9A, // soft red to match accentRackMat (0xef9a9a)
-      })
-      const mesh = new THREE.Mesh(geo, mat)
-      mesh.position.y = h / 2 // Move Up: Put bottom on floor
-      mesh.castShadow = true
-      mesh.receiveShadow = true
-      group.add(mesh)
+      const loader = new GLTFLoader()
+      loader.load(
+        '/models/danell_ridge_w556-48_ashley.glb',
+        (gltf) => {
+          const model = gltf.scene.clone()
+          const box = new THREE.Box3().setFromObject(model)
+          const size = new THREE.Vector3()
+          box.getSize(size)
+
+          if (size.x > 0.001) {
+            const scaleFactor = w / size.x
+            model.scale.set(scaleFactor, scaleFactor, scaleFactor)
+
+            // Get scaled bounds to align center horizontally and bottom to y=0
+            const scaledBox = new THREE.Box3().setFromObject(model)
+            const scaledCenter = new THREE.Vector3()
+            scaledBox.getCenter(scaledCenter)
+
+            model.position.set(-scaledCenter.x, -scaledBox.min.y, -scaledCenter.z)
+          }
+          group.add(model)
+        },
+        undefined,
+        (error) => {
+          console.error('Error loading cabinet model:', error)
+        },
+      )
     }
     else {
       // Find the closest wall segment to align the door
