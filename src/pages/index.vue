@@ -3,6 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { saveAs } from 'file-saver'
 import { showFailToast, showLoadingToast, showSuccessToast, showToast } from 'vant'
 import { generateImage } from '@/utils/imageExport'
+import bgImage from '@/assets/images/image.png'
 
 const active = ref(0)
 const selectedTemplate = ref(1)
@@ -90,7 +91,14 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="text-#333 flex flex-col min-h-screen from-blue-50 to-indigo-50/50 via-sky-50 bg-gradient-to-b">
+  <div
+    class="text-#333 flex flex-col min-h-screen relative"
+    :style="{
+      backgroundImage: `url(${bgImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }"
+  >
     <!-- Consolidated Header & Progress Section -->
     <AppHeader
       :active="active"
@@ -99,7 +107,7 @@ async function onSubmit() {
     />
 
     <!-- Step Content -->
-    <div class="px-6 pb-24 pt-1 flex-1 overflow-y-auto">
+    <div class="px-6 pb-24 pt-1 flex-1 relative z-10 overflow-y-auto">
       <TemplateStep
         v-show="active === 0"
         v-model="selectedTemplate"
