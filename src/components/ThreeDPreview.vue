@@ -3,6 +3,8 @@ import { onUnmounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import floorTextureUrl from '@/assets/images/granite_tile_04_rough_1k.png'
+import woodTextureUrl from '@/assets/images/wooden_garage_door_diff_1k.png'
 
 const props = defineProps<{
   show: boolean
@@ -137,7 +139,7 @@ function renderScene() {
 
     try {
       loader.load(
-        'https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/granite_tile_04/granite_tile_04_rough_1k.png',
+        floorTextureUrl,
         (tex) => {
           tex.wrapS = tex.wrapT = THREE.RepeatWrapping
           tex.repeat.set(0.25, 0.25)
@@ -415,7 +417,7 @@ function renderScene() {
       })
 
       woodLoader.load(
-        'https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/wooden_garage_door/wooden_garage_door_diff_1k.png',
+        woodTextureUrl,
         (tex) => {
           woodMat.map = tex
           woodMat.needsUpdate = true
