@@ -28,13 +28,11 @@ function select(id: number) {
     >
       <!-- Top info row -->
       <div class="flex min-h-[24px] items-center justify-start">
-        <span
+        <van-icon
           v-if="modelValue === item.id"
-          class="material-symbols-outlined text-[20px] text-primary leading-none"
-          style="font-variation-settings: 'FILL' 1;"
-        >
-          check_circle
-        </span>
+          name="checked"
+          class="text-[20px] text-primary"
+        />
       </div>
 
       <!-- Template title -->
@@ -46,8 +44,6 @@ function select(id: number) {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-
 .glass-card {
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(16px);
@@ -61,13 +57,5 @@ function select(id: number) {
 .active-ring {
   box-shadow: 0 0 0 2px #3b66f5;
   background: rgba(255, 255, 255, 0.7);
-}
-
-.material-symbols-outlined {
-  font-variation-settings:
-    'FILL' 0,
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 24;
 }
 </style>
