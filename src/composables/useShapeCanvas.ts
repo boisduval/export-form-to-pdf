@@ -1,6 +1,6 @@
 import { onUnmounted, shallowRef } from 'vue'
-import { Canvas, Control, controlsUtils, IText, Polygon, Rect } from 'fabric'
-import type { FabricObject } from 'fabric'
+import { Canvas, Control, controlsUtils, Polygon, Rect } from 'fabric'
+import type { FabricObject, IText } from 'fabric'
 
 export interface CanvasObject extends FabricObject {
   associatedLabel?: IText
@@ -11,8 +11,8 @@ export function useShapeCanvas() {
   const canvas = shallowRef<Canvas | null>(null)
   const activeObject = shallowRef<CanvasObject | null>(null)
 
-  const redColor = '#ef4444'
-  const doorColor = '#9CA3AF'
+  const redColor = '#B57474'
+  const doorColor = '#527EBF'
   const wallColor = '#8A8A8A'
   const wallStrokeWidth = 6
   const roomFillColor = '#EAEAEA'
@@ -119,18 +119,14 @@ export function useShapeCanvas() {
       return
 
     const obj = activeObject.value
-    const label = obj.associatedLabel
 
     // 烟柜不可删除
-    if (label && label.text === '烟柜')
+    if ((obj as any).name === 'cabinet')
       return
     // 房间轮廓不可删除
     if ((obj as any).name?.startsWith('room_'))
       return
 
-    if (label) {
-      canvas.value.remove(label)
-    }
     canvas.value.remove(obj)
     canvas.value.discardActiveObject()
     canvas.value.renderAll()
@@ -143,7 +139,7 @@ export function useShapeCanvas() {
 
     // 如果已经存在烟柜，则不重复添加
     const existingCabinet = canvas.value.getObjects().find(
-      obj => (obj as CanvasObject).associatedLabel?.text === '烟柜',
+      obj => (obj as any).name === 'cabinet',
     )
     if (existingCabinet)
       return
@@ -152,7 +148,7 @@ export function useShapeCanvas() {
     const cTop = top ?? canvas.value.getHeight() / 2
 
     let cabinet: FabricObject
-    const fill = 'rgba(239, 68, 68, 0.1)'
+    const fill = redColor
 
     if (type === 'l_shape') {
       const points = [
@@ -169,13 +165,14 @@ export function useShapeCanvas() {
         originX: 'center',
         originY: 'center',
         fill,
-        stroke: redColor,
-        strokeWidth: 2,
+        stroke: 'transparent',
+        strokeWidth: 0,
         cornerColor: redColor,
         cornerSize: 8,
         transparentCorners: false,
         strokeUniform: true,
-      })
+        name: 'cabinet',
+      } as any)
     }
     else if (type === 'convex') {
       const points = [
@@ -194,13 +191,15 @@ export function useShapeCanvas() {
         originX: 'center',
         originY: 'center',
         fill,
-        stroke: redColor,
-        strokeWidth: 2,
+        opacity: 1,
+        stroke: 'transparent',
+        strokeWidth: 0,
         cornerColor: redColor,
         cornerSize: 8,
         transparentCorners: false,
         strokeUniform: true,
-      })
+        name: 'cabinet',
+      } as any)
     }
     else {
       cabinet = new Rect({
@@ -211,13 +210,15 @@ export function useShapeCanvas() {
         width: 45,
         height: 30,
         fill,
-        stroke: redColor,
-        strokeWidth: 2,
+        opacity: 1,
+        stroke: 'transparent',
+        strokeWidth: 0,
         cornerColor: redColor,
         cornerSize: 8,
         transparentCorners: false,
         strokeUniform: true,
-      })
+        name: 'cabinet',
+      } as any)
     }
 
     cabinet.setControlsVisibility({
@@ -253,43 +254,13 @@ export function useShapeCanvas() {
       cabinet.controls.mtr.render = (ctx, left, top) => renderControlIcon(ctx, left, top, 'rotate', redColor)
     }
 
-    const label = new IText('烟柜', {
-      fontSize: 10,
-      fill: '#1e293b',
-      fontWeight: 'bold',
-      selectable: false,
-      evented: false,
-      originX: 'center',
-      originY: 'center',
-    })
-
-    ;(cabinet as CanvasObject).associatedLabel = label
-
-    const syncLabel = () => {
-      const center = cabinet.getCenterPoint()
-      const zoom = canvas.value?.getZoom() || 1
-      label.set({
-        left: center.x,
-        top: center.y,
-        angle: cabinet.angle,
-        fontSize: 10 / zoom,
-      })
-      if (canvas.value) {
-        canvas.value.bringObjectToFront(label)
-      }
-    }
-
-    cabinet.on('moving', syncLabel)
     cabinet.on('scaling', () => {
       cabinet.set({
         scaleY: cabinet.scaleX,
       })
-      syncLabel()
     })
-    cabinet.on('rotating', syncLabel)
 
-    canvas.value.add(cabinet, label)
-    syncLabel()
+    canvas.value.add(cabinet)
     canvas.value.setActiveObject(cabinet)
     canvas.value.renderAll()
   }
@@ -299,7 +270,7 @@ export function useShapeCanvas() {
       return
 
     const existingCabinet = canvas.value.getObjects().find(
-      obj => (obj as CanvasObject).associatedLabel?.text === '烟柜',
+      obj => (obj as any).name === 'cabinet',
     )
     if (!existingCabinet)
       return
@@ -307,13 +278,12 @@ export function useShapeCanvas() {
     const left = existingCabinet.left
     const top = existingCabinet.top
     const angle = existingCabinet.angle
-    const label = (existingCabinet as CanvasObject).associatedLabel
 
-    // Remove old cabinet but KEEP label
+    // Remove old cabinet
     canvas.value.remove(existingCabinet)
 
     let cabinet: FabricObject
-    const fill = 'rgba(239, 68, 68, 0.1)'
+    const fill = redColor
 
     if (type === 'l_shape') {
       const points = [
@@ -331,13 +301,15 @@ export function useShapeCanvas() {
         originX: 'center',
         originY: 'center',
         fill,
-        stroke: redColor,
-        strokeWidth: 2,
+        opacity: 1,
+        stroke: 'transparent',
+        strokeWidth: 0,
         cornerColor: redColor,
         cornerSize: 8,
         transparentCorners: false,
         strokeUniform: true,
-      })
+        name: 'cabinet',
+      } as any)
     }
     else if (type === 'convex') {
       const points = [
@@ -357,13 +329,15 @@ export function useShapeCanvas() {
         originX: 'center',
         originY: 'center',
         fill,
-        stroke: redColor,
-        strokeWidth: 2,
+        opacity: 1,
+        stroke: 'transparent',
+        strokeWidth: 0,
         cornerColor: redColor,
         cornerSize: 8,
         transparentCorners: false,
         strokeUniform: true,
-      })
+        name: 'cabinet',
+      } as any)
     }
     else {
       cabinet = new Rect({
@@ -375,13 +349,15 @@ export function useShapeCanvas() {
         width: 45,
         height: 30,
         fill,
-        stroke: redColor,
-        strokeWidth: 2,
+        opacity: 1,
+        stroke: 'transparent',
+        strokeWidth: 0,
         cornerColor: redColor,
         cornerSize: 8,
         transparentCorners: false,
         strokeUniform: true,
-      })
+        name: 'cabinet',
+      } as any)
     }
 
     cabinet.setControlsVisibility({
@@ -417,35 +393,13 @@ export function useShapeCanvas() {
       cabinet.controls.mtr.render = (ctx, left, top) => renderControlIcon(ctx, left, top, 'rotate', redColor)
     }
 
-    if (label) {
-      ;(cabinet as CanvasObject).associatedLabel = label
-      const syncLabel = () => {
-        const center = cabinet.getCenterPoint()
-        const zoom = canvas.value?.getZoom() || 1
-        label.set({
-          left: center.x,
-          top: center.y,
-          angle: cabinet.angle,
-          fontSize: 10 / zoom,
-        })
-        if (canvas.value) {
-          canvas.value.bringObjectToFront(label)
-        }
-      }
-
-      cabinet.on('moving', syncLabel)
-      cabinet.on('scaling', () => {
-        cabinet.set({
-          scaleY: cabinet.scaleX,
-        })
-        syncLabel()
+    cabinet.on('scaling', () => {
+      cabinet.set({
+        scaleY: cabinet.scaleX,
       })
-      cabinet.on('rotating', syncLabel)
+    })
 
-      canvas.value.add(cabinet)
-      syncLabel()
-    }
-
+    canvas.value.add(cabinet)
     canvas.value.setActiveObject(cabinet)
     canvas.value.renderAll()
   }
@@ -504,7 +458,7 @@ export function useShapeCanvas() {
 
     // 如果已经存在大门，则不重复添加
     const existingDoor = canvas.value.getObjects().find(
-      obj => (obj as CanvasObject).associatedLabel?.text === '大门',
+      obj => (obj as any).name === 'door',
     )
     if (existingDoor)
       return
@@ -519,15 +473,17 @@ export function useShapeCanvas() {
       originY: 'center',
       width: 100,
       height: wallStrokeWidth,
-      fill: '#ffffff',
-      stroke: doorColor,
-      strokeWidth: 1,
+      fill: doorColor,
+      opacity: 1,
+      stroke: 'transparent',
+      strokeWidth: 0,
       cornerColor: doorColor,
       cornerSize: 8,
       transparentCorners: false,
       strokeUniform: true,
       lockScalingY: true,
-    })
+      name: 'door',
+    } as any)
 
     door.setControlsVisibility({
       mt: false,
@@ -564,44 +520,14 @@ export function useShapeCanvas() {
       door.controls.mtr.render = (ctx, left, top) => renderControlIcon(ctx, left, top, 'rotate', doorColor)
     }
 
-    const label = new IText('大门', {
-      fontSize: 10,
-      fill: '#1e293b',
-      fontWeight: 'bold',
-      selectable: false,
-      evented: false,
-      originX: 'center',
-      originY: 'center',
-    })
-
-    ;(door as CanvasObject).associatedLabel = label
-
-    const syncLabel = () => {
-      const center = door.getCenterPoint()
-      const zoom = canvas.value?.getZoom() || 1
-      label.set({
-        left: center.x,
-        top: center.y,
-        angle: door.angle,
-        fontSize: 10 / zoom,
-      })
-      if (canvas.value) {
-        canvas.value.bringObjectToFront(label)
-      }
-    }
-
     const handleDoorMoving = () => {
       snapDoorToWall(door, 30)
-      syncLabel()
     }
 
     door.on('moving', handleDoorMoving)
-    door.on('scaling', syncLabel)
-    door.on('rotating', syncLabel)
 
-    canvas.value.add(door, label)
+    canvas.value.add(door)
     snapDoorToWall(door, 100)
-    syncLabel()
     canvas.value.setActiveObject(door)
     canvas.value.renderAll()
   }
@@ -661,27 +587,17 @@ export function useShapeCanvas() {
     if (!canvas.value)
       return
 
-    const cabinet = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '烟柜')
+    const cabinet = canvas.value.getObjects().find(o => (o as any).name === 'cabinet')
     if (cabinet) {
       cabinet.set({ left: cabX + 22.5, top: cabY + 15 })
       cabinet.setCoords()
-      ;(cabinet as any).associatedLabel?.set({ left: cabX + 22.5, top: cabY + 15 })
     }
 
-    const door = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '大门')
+    const door = canvas.value.getObjects().find(o => (o as any).name === 'door')
     if (door) {
       door.set({ left: doorX + 50, top: doorY })
       snapDoorToWall(door, 100)
       door.setCoords()
-
-      const center = door.getCenterPoint()
-      const zoom = canvas.value?.getZoom() || 1
-      ;(door as any).associatedLabel?.set({
-        left: center.x,
-        top: center.y,
-        angle: door.angle,
-        fontSize: 10 / zoom,
-      })
     }
   }
 
@@ -689,19 +605,13 @@ export function useShapeCanvas() {
     if (!canvas.value)
       return
 
-    const cabinet = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '烟柜')
+    const cabinet = canvas.value.getObjects().find(o => (o as any).name === 'cabinet')
     if (cabinet) {
-      if ((cabinet as any).associatedLabel) {
-        canvas.value.remove((cabinet as any).associatedLabel)
-      }
       canvas.value.remove(cabinet)
     }
 
-    const door = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '大门')
+    const door = canvas.value.getObjects().find(o => (o as any).name === 'door')
     if (door) {
-      if ((door as any).associatedLabel) {
-        canvas.value.remove((door as any).associatedLabel)
-      }
       canvas.value.remove(door)
     }
 

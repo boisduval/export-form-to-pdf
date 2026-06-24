@@ -21,6 +21,18 @@ const emit = defineEmits<{
       <slot name="overlay" />
     </div>
 
+    <!-- Legend (图例) -->
+    <div class="text-[10px] text-slate-500 font-semibold px-1 flex gap-3 items-center">
+      <div class="flex gap-1.5 items-center">
+        <span class="rounded-sm bg-[#B57474] h-2 w-3.5" />
+        <span>烟柜</span>
+      </div>
+      <div class="flex gap-1.5 items-center">
+        <span class="rounded-sm bg-[#527EBF] h-2 w-3.5" />
+        <span>大门</span>
+      </div>
+    </div>
+
     <!-- Actions Toolbar -->
     <div v-if="!readOnly" class="px-1 flex flex-col gap-4">
       <!-- Slot for toolbar controls (like snap switcher, close/undo/clear buttons) -->

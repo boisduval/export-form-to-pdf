@@ -206,10 +206,10 @@ function getPreviewData() {
     { x: -sw_max / 2, y: sh / 2 },
   ]
 
-  const objects = canvas.value.getObjects().filter(o => (o as any).associatedLabel)
+  const objects = canvas.value.getObjects().filter(o => (o as any).name === 'cabinet' || (o as any).name === 'door')
   const subObjects = objects.map(o => ({
-    type: (o as any).associatedLabel.text,
-    cabinetType: (o as any).associatedLabel.text === '烟柜' ? props.cabinetType : undefined,
+    type: (o as any).name === 'cabinet' ? '烟柜' : '大门',
+    cabinetType: (o as any).name === 'cabinet' ? props.cabinetType : undefined,
     left: o.left,
     top: o.top,
     width: (o as any).width * (o as any).scaleX,
