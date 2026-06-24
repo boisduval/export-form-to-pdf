@@ -12,7 +12,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <nav class="pb-safe px-8 border-t border-gray-100 bg-white/95 flex h-18 w-full shadow-[0_-4px_20px_rgba(0,0,0,0.03)] items-center bottom-0 left-0 justify-between fixed z-50 backdrop-blur-md">
+  <nav class="app-footer-glass pb-safe px-8 flex h-18 items-center bottom-4 left-4 right-4 justify-between fixed z-50">
     <!-- Previous Button -->
     <div
       class="flex flex-col cursor-pointer transition-all duration-200 items-center justify-center"
@@ -57,3 +57,16 @@ const emit = defineEmits<{
     </div>
   </nav>
 </template>
+
+<style scoped>
+.app-footer-glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.82) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 24px;
+  box-shadow:
+    0 -12px 32px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+}
+</style>
