@@ -5,6 +5,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import floorTextureUrl from '@/assets/images/granite_tile_04_rough_1k.png'
 import woodTextureUrl from '@/assets/images/wooden_garage_door_diff_1k.png'
+import doorUrl from '@/assets/images/door.png'
+import shelfUrl from '@/assets/images/shelf.jpg'
 
 const props = defineProps<{
   show: boolean
@@ -498,12 +500,25 @@ function handleClose() {
       </div>
 
       <div ref="canvasContainer" class="border border-slate-200 rounded-2xl bg-[#edf2f7] flex-1 shadow-inner relative overflow-hidden">
+        <!-- 3D View Instructions -->
         <div class="flex flex-col gap-1 pointer-events-none bottom-4 left-4 absolute z-10">
           <div class="text-[10px] text-slate-500 px-2 py-1 border border-slate-100 rounded bg-white/90 shadow-sm backdrop-blur">
             单指：旋转视图
           </div>
           <div class="text-[10px] text-slate-500 px-2 py-1 border border-slate-100 rounded bg-white/90 shadow-sm backdrop-blur">
             双指：缩放视图
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="text-xs p-2 border border-slate-100 rounded-xl bg-white/90 flex flex-row gap-4 shadow-lg bottom-4 right-4 absolute z-10 backdrop-blur">
+          <div class="flex gap-2 items-center">
+            <img :src="doorUrl" class="border border-slate-200 rounded bg-white h-6 w-6 object-contain" alt="大门">
+            <span class="text-slate-700 font-medium">大门</span>
+          </div>
+          <div class="flex gap-2 items-center">
+            <img :src="shelfUrl" class="border border-slate-200 rounded bg-white h-6 w-6 object-cover" alt="烟柜">
+            <span class="text-slate-700 font-medium">烟柜</span>
           </div>
         </div>
       </div>
