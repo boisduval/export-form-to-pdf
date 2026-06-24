@@ -23,6 +23,7 @@ const {
   wallColor,
   wallStrokeWidth,
   roomFillColor,
+  toDataURLWithLegend,
 } = useShapeCanvas()
 
 // 模态框控制
@@ -658,9 +659,7 @@ defineExpose({
   shape,
   rebuildShape,
   toDataURL: () => {
-    if (!canvas.value)
-      return ''
-    return canvas.value.toDataURL({ format: 'png', multiplier: 2, enableRetinaScaling: true })
+    return toDataURLWithLegend()
   },
 })
 </script>

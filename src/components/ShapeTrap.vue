@@ -23,6 +23,7 @@ const {
   wallColor,
   wallStrokeWidth,
   roomFillColor,
+  toDataURLWithLegend,
 } = useShapeCanvas()
 
 let roomGroup: (Polygon | IText)[] = [] // 记录房间轮廓相关的对象
@@ -233,13 +234,7 @@ defineExpose({
   trap,
   drawRoom,
   toDataURL: () => {
-    if (!canvas.value)
-      return ''
-    return canvas.value.toDataURL({
-      format: 'png',
-      multiplier: 2,
-      enableRetinaScaling: true,
-    })
+    return toDataURLWithLegend()
   },
 })
 </script>

@@ -1,6 +1,6 @@
 import { onUnmounted, shallowRef } from 'vue'
-import { Canvas, Control, controlsUtils, Polygon, Rect } from 'fabric'
-import type { FabricObject, IText } from 'fabric'
+import { Canvas, Control, controlsUtils, IText, Polygon, Rect } from 'fabric'
+import type { FabricObject } from 'fabric'
 
 export interface CanvasObject extends FabricObject {
   associatedLabel?: IText
@@ -618,6 +618,82 @@ export function useShapeCanvas() {
     canvas.value.renderAll()
   }
 
+  function toDataURLWithLegend() {
+    if (!canvas.value)
+      return ''
+
+    const vpt = canvas.value.viewportTransform || [1, 0, 0, 1, 0, 0]
+    const zoom = vpt[0]
+    // Position legend in the bottom-left corner of the current viewport
+    const leftX = (15 - vpt[4]) / zoom
+    const bottomY = (canvas.value.height - 20 - vpt[5]) / zoom
+
+    const fontSize = 10 / zoom
+
+    // 烟柜色块
+    const redRect = new Rect({
+      left: leftX,
+      top: bottomY,
+      width: 14 / zoom,
+      height: 8 / zoom,
+      fill: redColor,
+      stroke: 'transparent',
+      strokeWidth: 0,
+      originX: 'left',
+      originY: 'center',
+    })
+
+    const redText = new IText('烟柜', {
+      left: leftX + 18 / zoom,
+      top: bottomY,
+      fontSize,
+      fill: '#64748b',
+      originX: 'left',
+      originY: 'center',
+      fontFamily: 'sans-serif',
+      fontWeight: 'bold',
+    })
+
+    // 大门色块
+    const blueRect = new Rect({
+      left: leftX + 50 / zoom,
+      top: bottomY,
+      width: 14 / zoom,
+      height: 8 / zoom,
+      fill: doorColor,
+      stroke: 'transparent',
+      strokeWidth: 0,
+      originX: 'left',
+      originY: 'center',
+    })
+
+    const blueText = new IText('大门', {
+      left: leftX + 68 / zoom,
+      top: bottomY,
+      fontSize,
+      fill: '#64748b',
+      originX: 'left',
+      originY: 'center',
+      fontFamily: 'sans-serif',
+      fontWeight: 'bold',
+    })
+
+    const legendObjects = [redRect, redText, blueRect, blueText]
+    canvas.value.add(...legendObjects)
+    canvas.value.renderAll()
+
+    const dataURL = canvas.value.toDataURL({
+      format: 'png',
+      multiplier: 2,
+      enableRetinaScaling: true,
+    })
+
+    legendObjects.forEach(obj => canvas.value?.remove(obj))
+    canvas.value.renderAll()
+
+    return dataURL
+  }
+
   onUnmounted(() => {
     if (canvas.value) {
       canvas.value.dispose()
@@ -641,5 +717,6 @@ export function useShapeCanvas() {
     wallColor,
     wallStrokeWidth,
     roomFillColor,
+    toDataURLWithLegend,
   }
 }
