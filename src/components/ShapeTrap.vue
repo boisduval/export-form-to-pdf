@@ -268,8 +268,8 @@ defineExpose({
     </template>
 
     <template #inputs>
-      <div class="border-gray-50 rounded-xl bg-white flex flex-col shadow-sm overflow-hidden">
-        <van-cell-group :border="false">
+      <div class="border border-slate-200/50 rounded-xl bg-white/30 flex flex-col shadow-sm overflow-hidden backdrop-blur-md">
+        <van-cell-group :border="false" style="background: transparent;">
           <van-field
             v-model="trap.top"
             input-align="right"

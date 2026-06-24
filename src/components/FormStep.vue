@@ -53,8 +53,8 @@ defineExpose({
     </div>
 
     <!-- 卡片 1 -->
-    <div class="border border-gray-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
-      <van-cell-group :border="false">
+    <div class="border border-slate-200/50 rounded-xl bg-white/30 shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden backdrop-blur-md">
+      <van-cell-group :border="false" style="background: transparent;">
         <!-- 动态循环渲染配置的表单项 -->
         <van-field
           v-for="field in fields"
@@ -85,8 +85,8 @@ defineExpose({
     </div>
 
     <!-- 卡片 2 （仅在选择核查模版时显示） -->
-    <div v-if="isCheckTemplate" class="border border-gray-100 rounded-xl bg-white overflow-hidden">
-      <div class="p-4 bg-white flex flex-col h-64 items-center justify-center overflow-hidden">
+    <div v-if="isCheckTemplate" class="border border-slate-200/50 rounded-xl bg-white/30 overflow-hidden backdrop-blur-md">
+      <div class="p-4 bg-transparent flex flex-col h-64 items-center justify-center overflow-hidden">
         <img
           v-if="drawingData?.image"
           :src="drawingData.image"
