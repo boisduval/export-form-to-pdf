@@ -38,7 +38,7 @@ const emit = defineEmits<{
     <!-- Submit Button (Active) -->
     <button
       v-else-if="active === (maxSteps || 2)"
-      class="text-white font-bold px-8 py-3 rounded-full border-none flex gap-2 cursor-pointer shadow-emerald-500/20 shadow-lg transition-all duration-200 items-center from-emerald-500 to-teal-600 bg-gradient-to-r active:shadow-md active:scale-95"
+      class="text-white font-bold px-8 py-3 rounded-full border-none flex gap-2 cursor-pointer shadow-blue-500/20 shadow-lg transition-all duration-200 items-center from-blue-500 to-indigo-600 bg-gradient-to-r active:shadow-md active:scale-95"
       @click="emit('submit')"
     >
       <span class="text-xs tracking-wider">立即提交</span>
