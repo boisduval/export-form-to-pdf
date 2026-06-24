@@ -144,7 +144,7 @@ function rebuildShape(snappedPoint: any = null, skipViewportUpdate = false) {
   const allObjects = canvas.value.getObjects().slice()
   allObjects.forEach((obj: any) => {
     const n = obj.name
-    if (['room_snap_line', 'room_snap_circle', 'room_temp_line', 'room_label', 'room_outline'].includes(n)) {
+    if (['room_snap_line', 'room_snap_circle', 'room_temp_line', 'room_label', 'room_outline', 'room_area_label'].includes(n)) {
       canvas.value?.remove(obj)
     }
   })
@@ -289,6 +289,25 @@ function rebuildShape(snappedPoint: any = null, skipViewportUpdate = false) {
       a += points[i].x * next.y - next.x * points[i].y
     }
     calculatedArea.value = (Math.abs(a) / 2) / (M_SCALE * M_SCALE)
+
+    // Position legend/area in the bottom-right corner of the current viewport
+    const vpt = canvas.value.viewportTransform || [1, 0, 0, 1, 0, 0]
+    const rightX = (canvas.value.width - 20 - vpt[4]) / zoom
+    const bottomY = (canvas.value.height - 20 - vpt[5]) / zoom
+
+    const areaLabel = new IText(`S = ${calculatedArea.value.toFixed(2)}㎡`, {
+      left: rightX,
+      top: bottomY,
+      fontSize: 12 / zoom,
+      fill: '#64748b',
+      fontWeight: 'bold',
+      originX: 'right',
+      originY: 'bottom',
+      selectable: false,
+      evented: false,
+      name: 'room_area_label',
+    } as any)
+    canvas.value.add(areaLabel)
   }
   else {
     calculatedArea.value = 0

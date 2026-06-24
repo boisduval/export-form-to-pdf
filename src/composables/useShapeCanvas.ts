@@ -679,6 +679,7 @@ export function useShapeCanvas() {
     })
 
     const legendObjects = [redRect, redText, blueRect, blueText]
+
     canvas.value.add(...legendObjects)
     canvas.value.renderAll()
 

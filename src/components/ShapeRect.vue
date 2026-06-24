@@ -109,6 +109,18 @@ function drawRoom() {
       selectable: false,
       evented: false,
     }),
+    // 面积标注 (右下角)
+    new IText(`S = ${(rw * rh).toFixed(2)}㎡`, {
+      left: cw - 20,
+      top: ch - 20,
+      originX: 'right',
+      originY: 'bottom',
+      fontSize: 12,
+      fill: '#64748b',
+      fontWeight: 'bold',
+      selectable: false,
+      evented: false,
+    }),
   ]
   canvas.value.add(...roomGroup)
   roomGroup.forEach(obj => canvas.value?.sendObjectToBack(obj))
