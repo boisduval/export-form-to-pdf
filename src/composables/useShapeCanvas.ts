@@ -579,7 +579,7 @@ export function useShapeCanvas() {
   }
 
   function presetCabinetAndDoor(cabX: number, cabY: number, doorX: number, doorY: number, type: 'default' | 'l_shape' | 'convex' = 'default') {
-    addCabinet(cabX + 22.5, cabY + 15, type)
+    addCabinet(cabX + 22.5 + wallStrokeWidth / 2, cabY + 15 + wallStrokeWidth / 2, type)
     addDoor(doorX + 50, doorY)
   }
 
@@ -589,7 +589,7 @@ export function useShapeCanvas() {
 
     const cabinet = canvas.value.getObjects().find(o => (o as any).name === 'cabinet')
     if (cabinet) {
-      cabinet.set({ left: cabX + 22.5, top: cabY + 15 })
+      cabinet.set({ left: cabX + 22.5 + wallStrokeWidth / 2, top: cabY + 15 + wallStrokeWidth / 2 })
       cabinet.setCoords()
     }
 
