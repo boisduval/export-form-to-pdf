@@ -20,6 +20,9 @@ const {
   presetCabinetAndDoor,
   repositionPresetObjects,
   updateCabinetShape,
+  wallColor,
+  wallStrokeWidth,
+  roomFillColor,
 } = useShapeCanvas()
 
 let roomGroup: (Polygon | IText)[] = [] // 记录房间轮廓相关的对象
@@ -87,9 +90,9 @@ function drawRoom() {
     top: ch / 2,
     originX: 'center',
     originY: 'center',
-    fill: 'transparent',
-    stroke: primaryColor,
-    strokeWidth: 2,
+    fill: roomFillColor,
+    stroke: wallColor,
+    strokeWidth: wallStrokeWidth,
     selectable: false,
     evented: false,
   })

@@ -13,6 +13,9 @@ export function useShapeCanvas() {
 
   const redColor = '#ef4444'
   const doorColor = '#9CA3AF'
+  const wallColor = '#8A8A8A'
+  const wallStrokeWidth = 6
+  const roomFillColor = '#EAEAEA'
 
   function renderControlIcon(ctx: CanvasRenderingContext2D, left: number, top: number, type: 'drag' | 'rotate', color: string) {
     ctx.save()
@@ -447,6 +450,54 @@ export function useShapeCanvas() {
     canvas.value.renderAll()
   }
 
+  function getWallSegments() {
+    if (!canvas.value)
+      return []
+    const roomOutline = canvas.value.getObjects().find(o => o.name === 'room_outline')
+    if (!roomOutline)
+      return []
+
+    const segments: { p1: { x: number, y: number }, p2: { x: number, y: number } }[] = []
+
+    if (roomOutline.type === 'rect') {
+      const rect = roomOutline as Rect
+      const center = rect.getCenterPoint()
+      const w = rect.width * rect.scaleX
+      const h = rect.height * rect.scaleY
+      const x1 = center.x - w / 2
+      const x2 = center.x + w / 2
+      const y1 = center.y - h / 2
+      const y2 = center.y + h / 2
+
+      const pts = [
+        { x: x1, y: y1 },
+        { x: x2, y: y1 },
+        { x: x2, y: y2 },
+        { x: x1, y: y2 },
+      ]
+      for (let i = 0; i < 4; i++) {
+        segments.push({ p1: pts[i], p2: pts[(i + 1) % 4] })
+      }
+    }
+    else if (roomOutline.type === 'polygon') {
+      const poly = roomOutline as Polygon
+      const points = poly.points || []
+      const matrix = poly.calcTransformMatrix()
+      const absPoints = points.map((p) => {
+        const x = p.x - (poly.pathOffset?.x || 0)
+        const y = p.y - (poly.pathOffset?.y || 0)
+        return {
+          x: matrix[0] * x + matrix[2] * y + matrix[4],
+          y: matrix[1] * x + matrix[3] * y + matrix[5],
+        }
+      })
+      for (let i = 0; i < absPoints.length; i++) {
+        segments.push({ p1: absPoints[i], p2: absPoints[(i + 1) % absPoints.length] })
+      }
+    }
+    return segments
+  }
+
   function addDoor(left?: number, top?: number) {
     if (!canvas.value)
       return
@@ -467,7 +518,7 @@ export function useShapeCanvas() {
       originX: 'center',
       originY: 'center',
       width: 100,
-      height: 15,
+      height: wallStrokeWidth,
       fill: '#ffffff',
       stroke: doorColor,
       strokeWidth: 1,
@@ -539,7 +590,53 @@ export function useShapeCanvas() {
       }
     }
 
-    door.on('moving', syncLabel)
+    const handleDoorMoving = () => {
+      const segments = getWallSegments()
+      let bestDist = Infinity
+      let bestPt = { x: door.left, y: door.top }
+      let bestAngle = door.angle
+
+      const doorCenter = { x: door.left, y: door.top }
+
+      segments.forEach((seg) => {
+        const A = seg.p1
+        const B = seg.p2
+        const abX = B.x - A.x
+        const abY = B.y - A.y
+        const abLenSq = abX * abX + abY * abY
+        if (abLenSq === 0)
+          return
+
+        const apX = doorCenter.x - A.x
+        const apY = doorCenter.y - A.y
+        let t = (apX * abX + apY * abY) / abLenSq
+        t = Math.max(0, Math.min(1, t))
+
+        const projX = A.x + t * abX
+        const projY = A.y + t * abY
+        const dist = Math.hypot(doorCenter.x - projX, doorCenter.y - projY)
+
+        if (dist < bestDist) {
+          bestDist = dist
+          bestPt = { x: projX, y: projY }
+          bestAngle = Math.atan2(abY, abX) * 180 / Math.PI
+        }
+      })
+
+      // Snapping threshold of 30 pixels
+      if (bestDist < 30) {
+        door.set({
+          left: bestPt.x,
+          top: bestPt.y,
+          angle: bestAngle,
+        })
+        door.setCoords()
+      }
+
+      syncLabel()
+    }
+
+    door.on('moving', handleDoorMoving)
     door.on('scaling', syncLabel)
     door.on('rotating', syncLabel)
 
@@ -616,5 +713,8 @@ export function useShapeCanvas() {
     presetCabinetAndDoor,
     repositionPresetObjects,
     removeCabinetAndDoor,
+    wallColor,
+    wallStrokeWidth,
+    roomFillColor,
   }
 }

@@ -20,6 +20,9 @@ const {
   presetCabinetAndDoor,
   removeCabinetAndDoor,
   updateCabinetShape,
+  wallColor,
+  wallStrokeWidth,
+  roomFillColor,
 } = useShapeCanvas()
 
 // 模态框控制
@@ -193,9 +196,9 @@ function rebuildShape(snappedPoint: any = null, skipViewportUpdate = false) {
   let outline: any
   if (isClosed) {
     outline = new Polygon(fabricPoints, {
-      fill: 'transparent',
-      stroke: primaryColor,
-      strokeWidth: 2 / zoom,
+      fill: roomFillColor,
+      stroke: wallColor,
+      strokeWidth: wallStrokeWidth / zoom,
       selectable: false,
       evented: false,
       name: 'room_outline',
