@@ -80,7 +80,8 @@ function drawRoom() {
     strokeWidth: wallStrokeWidth,
     selectable: false,
     evented: false,
-  })
+    name: 'room_outline',
+  } as any)
 
   roomGroup = [
     roomRect,

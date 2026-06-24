@@ -95,7 +95,8 @@ function drawRoom() {
     strokeWidth: wallStrokeWidth,
     selectable: false,
     evented: false,
-  })
+    name: 'room_outline',
+  } as any)
 
   const L = cw / 2 - sw_max / 2 // Bounding box left
 

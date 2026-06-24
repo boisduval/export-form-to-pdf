@@ -453,7 +453,7 @@ export function useShapeCanvas() {
   function getWallSegments() {
     if (!canvas.value)
       return []
-    const roomOutline = canvas.value.getObjects().find(o => o.name === 'room_outline')
+    const roomOutline = canvas.value.getObjects().find(o => (o as any).name === 'room_outline')
     if (!roomOutline)
       return []
 
@@ -591,48 +591,7 @@ export function useShapeCanvas() {
     }
 
     const handleDoorMoving = () => {
-      const segments = getWallSegments()
-      let bestDist = Infinity
-      let bestPt = { x: door.left, y: door.top }
-      let bestAngle = door.angle
-
-      const doorCenter = { x: door.left, y: door.top }
-
-      segments.forEach((seg) => {
-        const A = seg.p1
-        const B = seg.p2
-        const abX = B.x - A.x
-        const abY = B.y - A.y
-        const abLenSq = abX * abX + abY * abY
-        if (abLenSq === 0)
-          return
-
-        const apX = doorCenter.x - A.x
-        const apY = doorCenter.y - A.y
-        let t = (apX * abX + apY * abY) / abLenSq
-        t = Math.max(0, Math.min(1, t))
-
-        const projX = A.x + t * abX
-        const projY = A.y + t * abY
-        const dist = Math.hypot(doorCenter.x - projX, doorCenter.y - projY)
-
-        if (dist < bestDist) {
-          bestDist = dist
-          bestPt = { x: projX, y: projY }
-          bestAngle = Math.atan2(abY, abX) * 180 / Math.PI
-        }
-      })
-
-      // Snapping threshold of 30 pixels
-      if (bestDist < 30) {
-        door.set({
-          left: bestPt.x,
-          top: bestPt.y,
-          angle: bestAngle,
-        })
-        door.setCoords()
-      }
-
+      snapDoorToWall(door, 30)
       syncLabel()
     }
 
@@ -641,14 +600,61 @@ export function useShapeCanvas() {
     door.on('rotating', syncLabel)
 
     canvas.value.add(door, label)
+    snapDoorToWall(door, 100)
     syncLabel()
     canvas.value.setActiveObject(door)
     canvas.value.renderAll()
   }
 
+  function snapDoorToWall(doorObj: any, threshold = 100) {
+    const segments = getWallSegments()
+    if (segments.length === 0)
+      return
+
+    let bestDist = Infinity
+    let bestPt = { x: doorObj.left, y: doorObj.top }
+    let bestAngle = doorObj.angle
+
+    const doorCenter = { x: doorObj.left, y: doorObj.top }
+
+    segments.forEach((seg) => {
+      const A = seg.p1
+      const B = seg.p2
+      const abX = B.x - A.x
+      const abY = B.y - A.y
+      const abLenSq = abX * abX + abY * abY
+      if (abLenSq === 0)
+        return
+
+      const apX = doorCenter.x - A.x
+      const apY = doorCenter.y - A.y
+      let t = (apX * abX + apY * abY) / abLenSq
+      t = Math.max(0, Math.min(1, t))
+
+      const projX = A.x + t * abX
+      const projY = A.y + t * abY
+      const dist = Math.hypot(doorCenter.x - projX, doorCenter.y - projY)
+
+      if (dist < bestDist) {
+        bestDist = dist
+        bestPt = { x: projX, y: projY }
+        bestAngle = Math.atan2(abY, abX) * 180 / Math.PI
+      }
+    })
+
+    if (bestDist < threshold) {
+      doorObj.set({
+        left: bestPt.x,
+        top: bestPt.y,
+        angle: bestAngle,
+      })
+      doorObj.setCoords()
+    }
+  }
+
   function presetCabinetAndDoor(cabX: number, cabY: number, doorX: number, doorY: number, type: 'default' | 'l_shape' | 'convex' = 'default') {
     addCabinet(cabX + 22.5, cabY + 15, type)
-    addDoor(doorX + 50, doorY - 7.5)
+    addDoor(doorX + 50, doorY)
   }
 
   function repositionPresetObjects(cabX: number, cabY: number, doorX: number, doorY: number) {
@@ -664,9 +670,18 @@ export function useShapeCanvas() {
 
     const door = canvas.value.getObjects().find(o => (o as any).associatedLabel?.text === '大门')
     if (door) {
-      door.set({ left: doorX + 50, top: doorY - 7.5 })
+      door.set({ left: doorX + 50, top: doorY })
+      snapDoorToWall(door, 100)
       door.setCoords()
-      ;(door as any).associatedLabel?.set({ left: doorX + 50, top: doorY - 7.5 })
+
+      const center = door.getCenterPoint()
+      const zoom = canvas.value?.getZoom() || 1
+      ;(door as any).associatedLabel?.set({
+        left: center.x,
+        top: center.y,
+        angle: door.angle,
+        fontSize: 10 / zoom,
+      })
     }
   }
 
