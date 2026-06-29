@@ -3,6 +3,7 @@ import { onUnmounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import floorTextureUrl from '@/assets/images/granite_tile_04_rough_1k.png'
 import woodTextureUrl from '@/assets/images/wooden_garage_door_diff_1k.png'
 import doorUrl from '@/assets/images/door.png'
@@ -12,8 +13,15 @@ const props = defineProps<{
   show: boolean
   data: any // { type: 'rect'|'trap'|'poly', canvasWidth, canvasHeight, ... }
 }>()
-
 const emit = defineEmits(['update:show'])
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath(`${import.meta.env.BASE_URL}draco/gltf/`)
+
+function createGLTFLoader() {
+  const loader = new GLTFLoader()
+  loader.setDRACOLoader(dracoLoader)
+  return loader
+}
 
 const canvasContainer = ref<HTMLDivElement | null>(null)
 let scene: THREE.Scene | null = null
@@ -340,8 +348,8 @@ function renderScene() {
     let groupRotationY = -THREE.MathUtils.degToRad(obj.angle)
 
     if (isCabinet) {
-      const loader = new GLTFLoader()
-      let modelPath = `${import.meta.env.BASE_URL}models/shelf1.glb` // 默认烟柜
+      const loader = createGLTFLoader()
+      let modelPath = `${import.meta.env.BASE_URL}models/shelf5.glb` // 默认烟柜
       if (obj.cabinetType === 'l_shape') {
         modelPath = `${import.meta.env.BASE_URL}models/danell_ridge_w556-48_ashley.glb` // L型烟柜 (未来可在此处替换文件路径)
       }
