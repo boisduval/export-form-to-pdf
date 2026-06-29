@@ -341,7 +341,7 @@ function renderScene() {
 
     if (isCabinet) {
       const loader = new GLTFLoader()
-      let modelPath = `${import.meta.env.BASE_URL}models/danell_ridge_w556-48_ashley.glb` // 默认烟柜
+      let modelPath = `${import.meta.env.BASE_URL}models/shelf1.glb` // 默认烟柜
       if (obj.cabinetType === 'l_shape') {
         modelPath = `${import.meta.env.BASE_URL}models/danell_ridge_w556-48_ashley.glb` // L型烟柜 (未来可在此处替换文件路径)
       }
